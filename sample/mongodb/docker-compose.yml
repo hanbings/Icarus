@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  mongodb:
+    image: mongo
+    container_name: starplex-mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - /app/starplex-mongodb/data:/data/db
+      - /app/starplex-mongodb/config:/data/config
+      - /app/starplex-mongodb/log:/data/log
+      - /app/starplex-mongodb/key:/data/key
+    privileged: true
+    command: mongod -f /data/config/mongod.conf

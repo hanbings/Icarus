@@ -1,0 +1,63 @@
+version: '3'
+
+services:
+  drone:
+    image: drone/drone:2
+    container_name: drone
+    volumes:
+      - /app/drone/data:/data
+    environment:
+      - DRONE_GITHUB_CLIENT_ID=
+      - DRONE_GITHUB_CLIENT_SECRET=
+      - DRONE_RPC_SECRET=
+      - DRONE_SERVER_HOST=
+      - DRONE_SERVER_PROTO=https
+    ports:
+      - "10000:80"
+      - "10001:443"
+    restart: always
+  
+  drone-runner-0:
+    image: drone/drone-runner-docker:1
+    container_name: drone-runner-0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=https
+      - DRONE_RPC_HOST=
+      - DRONE_RPC_SECRET=
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RUNNER_NAME=drone-runner-0
+    ports:
+      - "10002:3000"
+    restart: always
+
+  drone-runner-1:
+    image: drone/drone-runner-docker:1
+    container_name: drone-runner-1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=https
+      - DRONE_RPC_HOST=
+      - DRONE_RPC_SECRET=
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RUNNER_NAME=drone-runner-1
+    ports:
+      - "10003:3000"
+    restart: always
+
+  drone-runner-2:
+    image: drone/drone-runner-docker:1
+    container_name: drone-runner-2
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_PROTO=https
+      - DRONE_RPC_HOST=
+      - DRONE_RPC_SECRET=
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RUNNER_NAME=drone-runner-2
+    ports:
+      - "10004:3000"
+    restart: always
