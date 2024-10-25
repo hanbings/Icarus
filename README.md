@@ -11,12 +11,13 @@
 [详细架构描述](./docs/architecture.md)
 
 ### 主程序
-- [starplex](./starplex) - 星从 用户侧应用的后端 Java
-- [starplex-web](./starplex-web) - 星从 用户侧应用的前端 React
-- ceres - 谷神星 公开服务的状态监测网页 Vue
+- [starplex](./starplex) - 星从 用户侧应用的后端 - Java
+- [starplex-web](./starplex-web) - 星从 用户侧应用的前端 - TypeScript（React）
+- ceres - 谷神星 公开服务的状态监测网页 - TypeScript（Vue）
 
 ### 基础设施
-- [Icarus](./icarus) - 伊卡洛斯 分布式系统控制面板 - React（Next.js / TypeScript）
+- [Icarus](./icarus) - 伊卡洛斯 分布式系统控制面板后端 - Rust
+- [Icarus-web](./icarus-web) - 伊卡洛斯 分布式系统控制面板前端 - TypeScript（React）
 - [Iris](./iris) - 虹神星 分布式工具库 - Rust
 - [Makemake](./makemake) - 鸟神星 分布式消息队列 - Rust
 - [Flora](./flora) - 花神星 分布式发现中心 - Rust
