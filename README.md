@@ -1,4 +1,4 @@
-![Icarus](https://ice.frostsky.com/2024/10/24/724e7a0e3974a1de00a4dcb891b89001.png)
+![Icarus](https://ice.frostsky.com/2024/10/25/71cadee62ff279e70272ad13431e9cce.png)
 
 <h1 align="center">🌟 Icarus</h1>
 
