@@ -8,7 +8,7 @@
 
 项目包含满足赛题基础部分所描述的 Github Rank 应用（主程序）以及一部分用于拉取和分析 Github 数据所需要的基础设施。
 
-[详细架构描述](./architecture.md)
+[详细架构描述](./docs/architecture.md)
 
 ### 主程序
 - [starplex](./starplex) - 星从 用户侧应用的后端 Java
@@ -24,5 +24,9 @@
 
 ### 爬取器与分析器
 
-- salacia - 潫神星 Github 原始数据爬取器 Rust
+- [salacia](./salacia) - 潫神星 Github 原始数据爬取器 Java
 - pallas - 智神星 Github 数据分析器 Python
+
+## 贡献
+
+[贡献指南](./CONTRIBUTING.md)
