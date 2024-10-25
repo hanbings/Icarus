@@ -3,4 +3,19 @@ name = "iris"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "iris_irides"
+path = "src/lib.rs"
+
 [dependencies]
+log = "0.4"
+rand = "0.8"
+env_logger = "0.11"
+bon = "2.3.0"
+uuid = { version = "1.11.0", features = ["v4", "serde"] }
+
+actix-web = "4"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = "0.12.8"
