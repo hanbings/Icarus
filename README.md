@@ -13,7 +13,8 @@
 ### 主程序
 - [starplex](./starplex) - 星从 用户侧应用的后端 - Java
 - [starplex-web](./starplex-web) - 星从 用户侧应用的前端 - TypeScript（React）
-- ceres - 谷神星 公开服务的状态监测网页 - TypeScript（Vue）
+- [ceres](./ceres) - 谷神星 公开服务的状态监测网页后端 - Go
+- [ceres-web](./ceres-web) - 谷神星 公开服务的状态监测网页前端 - TypeScript（Vue）
 
 ### 基础设施
 - [Icarus](./icarus) - 伊卡洛斯 分布式系统控制面板后端 - Rust
@@ -26,7 +27,7 @@
 ### 爬取器与分析器
 
 - [salacia](./salacia) - 潫神星 Github 原始数据爬取器 Java
-- pallas - 智神星 Github 数据分析器 Python
+- [pallas](./pallas) - 智神星 Github 数据分析器 Python
 
 ## 贡献
 
