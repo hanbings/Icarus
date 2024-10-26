@@ -1,7 +1,7 @@
-pub async fn anti_entropy() {
+pub async fn post_anti_entropy() {
     todo!()
 }
 
-pub async fn rumor_mongering() {
+pub async fn post_rumor_mongering() {
     todo!()
 }

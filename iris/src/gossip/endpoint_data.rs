@@ -20,8 +20,7 @@ struct Message {
     code: i32,
 }
 
-#[get("/data")]
-pub async fn data(cluster_state: web::Data<Mutex<&mut ClusterState>>)
+pub async fn get_data(cluster_state: web::Data<Mutex<&mut ClusterState>>)
                   -> Result<impl Responder> {
     let node = cluster_state.lock().unwrap();
     let data = &node.data;
@@ -29,8 +28,7 @@ pub async fn data(cluster_state: web::Data<Mutex<&mut ClusterState>>)
     Ok(web::Json(data.clone()))
 }
 
-#[get("/data/{key}")]
-pub async fn get_data(
+pub async fn get_data_with_key(
     path: web::Query<DataKey>,
     cluster_state: web::Data<Mutex<&mut ClusterState>>,
 ) -> Result<impl Responder> {
@@ -40,8 +38,7 @@ pub async fn get_data(
     Ok(web::Json(Message { message: "success".to_string(), code: 200 }))
 }
 
-#[post("/data/{key}")]
-pub async fn create_or_update_data(
+pub async fn post_create_or_update_data_with_key(
     path: web::Query<Data>,
     cluster_state: web::Data<Mutex<&mut ClusterState>>,
 ) -> Result<impl Responder> {
@@ -52,7 +49,6 @@ pub async fn create_or_update_data(
     Ok(web::Json(Message { message: "success".to_string(), code: 200 }))
 }
 
-#[delete("/data/{key}")]
 pub async fn delete_data(
     path: web::Query<DataKey>,
     cluster_state: web::Data<Mutex<&mut ClusterState>>,

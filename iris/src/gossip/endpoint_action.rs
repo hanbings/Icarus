@@ -4,8 +4,7 @@ use actix_web::web::Data;
 use actix_web::{post, web, Responder, Result};
 use std::sync::Mutex;
 
-#[post("/connect")]
-pub async fn handler_connect(
+pub async fn post_connect(
     node: web::Json<GossipNode>,
     cluster_state: Data<Mutex<ClusterState>>,
 ) -> Result<impl Responder> {
@@ -21,8 +20,7 @@ pub async fn handler_connect(
     Ok(web::Json(nodes.clone()))
 }
 
-#[post("/disconnect")]
-pub async fn handler_disconnect(
+pub async fn post_disconnect(
     node: web::Json<GossipNode>,
     cluster_state: Data<Mutex<ClusterState>>,
 ) -> Result<impl Responder> {
