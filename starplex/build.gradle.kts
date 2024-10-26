@@ -4,6 +4,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
 }
 
+@Suppress("SpellCheckingInspection")
 group = "io.hanbings.server"
 version = "0.0.1-SNAPSHOT"
 
@@ -22,6 +23,7 @@ configurations {
 repositories {
     mavenCentral()
     maven {
+        @Suppress("SpellCheckingInspection")
         name = "hanbings"
         url = uri("https://repository.hanbings.io/snapshots")
     }
@@ -34,8 +36,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-web-services")
 
-    implementation("io.hanbings.flows:flows-common:3170ba3-SNAPSHOT")
-    implementation("io.hanbings.flows:flows-github:3170ba3-SNAPSHOT")
+    // https://mvnrepository.com/artifact/org.aspectj/aspectjtools
+    implementation("org.aspectj:aspectjtools:1.9.22.1")
+
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation("com.google.code.gson:gson:2.11.0")
 
     // https://mvnrepository.com/artifact/org.kohsuke/github-api
     implementation("org.kohsuke:github-api:2.0.0-alpha-2")
