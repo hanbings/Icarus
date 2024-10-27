@@ -19,6 +19,8 @@ import java.util.Objects;
  * <p>
  * Algorithm is based on the MIT open source protocol:
  * <a href="https://github.com/AykutSarac/github-rater/blob/main/LICENSE">AykutSarac/github-rater LICENSE</a>
+ * <p>
+ * Fine, this is really badly written. I'll come back and revise it later if I have time :)
  */
 @Slf4j
 @Data
