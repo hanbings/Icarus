@@ -42,7 +42,7 @@ export function randomBentoBox(row: number, col: number, height: number, width: 
             let width = box.properties.width
             let height = box.properties.height
 
-            if (i + width >= col || j + height >= row) {
+            if (i + width > col || j + height > row) {
                 box = Box[0]
                 width = 1
                 height = 1

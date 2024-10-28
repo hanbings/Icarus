@@ -4,18 +4,13 @@ use crate::raft::state::{IrisRaftClock, IrisRaftNodeState};
 use bon::Builder;
 use std::collections::HashMap;
 
-#[derive(Builder)]
-pub struct IrisRaftClientConfig {
-    endpoint: String,
-    election_timeout: (usize, usize),
-    heartbeat_timeout: usize,
-}
-
 #[derive(Builder, Clone)]
 pub struct IrisRaftConfig {
     pub node: Vec<String>,
     pub secret: String,
     pub endpoint: String,
+    pub heartbeat_timeout: usize,
+    pub election_timeout: (usize, usize),
     pub log_read: fn(LogEntry) -> bool,
     pub log_write: fn(LogEntry) -> bool,
     pub data_read: for<'a> fn(&'a HashMap<String, String>, &'a String) -> &'a String,
@@ -24,10 +19,18 @@ pub struct IrisRaftConfig {
 }
 
 impl IrisRaftConfig {
-    pub fn no_log_compaction(node: Vec<String>, secret: String, endpoint: String) -> Self {
+    pub fn no_log_compaction(
+        node: Vec<String>,
+        secret: String,
+        endpoint: String,
+        heartbeat_timeout: usize,
+        election_timeout: (usize, usize)
+    ) -> Self {
         Self {
             node,
             secret,
+            heartbeat_timeout,
+            election_timeout,
             log_write: |_log| true,
             log_read: |_log| true,
             data_read: |data, key| {

@@ -1,5 +1,5 @@
 ip = "0.0.0.0"
 port = 10086
-endpoint = "127.0.0.1:10086/cluster"
+endpoint = "http://127.0.0.1:10086/cluster"
 node = []
 secret = "ce38ee76-b0ee-dcf3-d4f6-641a12d951dc"

@@ -15,14 +15,14 @@ pub enum IrisRaftNodeType {
 }
 
 #[derive(Clone)]
-pub struct IrisRaftNodeState {
-    node: IrisRaftNode,
-    nodes: Vec<IrisRaftNode>,
-    raft_node_type: IrisRaftNodeType,
-    term: usize,
-    data: HashMap<String, String>,
-    log: Vec<LogEntry>,
-    config: IrisRaftConfig,
+pub struct  IrisRaftNodeState {
+    pub node: IrisRaftNode,
+    pub nodes: Vec<IrisRaftNode>,
+    pub raft_node_type: IrisRaftNodeType,
+    pub term: usize,
+    pub data: HashMap<String, String>,
+    pub log: Vec<LogEntry>,
+    pub config: IrisRaftConfig,
 }
 
 impl IrisRaftNodeState {
@@ -48,20 +48,23 @@ impl IrisRaftNodeState {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct IrisRaftClock {
-    last_heartbeat: usize,
-    last_election: usize,
-    election_clock: usize,
-    heartbeat_clock: usize,
-    current_election_timeout_size: usize,
+    pub last_election_time: usize,
+    pub last_heartbeat_time: usize,
+    pub election_clock: usize,
+    pub heartbeat_clock: usize,
+    pub current_election_timeout_size: usize,
 }
 
 impl IrisRaftClock {
     pub fn new() -> Self {
         Self {
-            last_heartbeat: 0,
-            last_election: 0,
+            // That time is updated by the append and vote interfaces.
+            last_election_time: 0,
+            last_heartbeat_time: 0,
+            // That time is updated by the check interfaces.
             election_clock: 0,
             heartbeat_clock: 0,
+            // The random timeout of vote in the raft random mechanism.
             current_election_timeout_size: 0,
         }
     }

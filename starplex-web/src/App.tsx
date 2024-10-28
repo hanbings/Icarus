@@ -7,7 +7,6 @@ function App() {
     const texts = useMemo(() => ["✨", "🚀", "😶‍🌫️", "🎉", "🎁"], [])
     const [currentText, setCurrentText] = useState(texts[0])
     const [index, setIndex] = useState(0)
-
     const [bento, setBento] = useState(randomBentoBox(4, 4, 24, 12, 0.5))
 
     useEffect(() => {
@@ -18,14 +17,10 @@ function App() {
         return () => clearInterval(titleEmoji)
     }, [texts.length])
 
-    useEffect(() => {
-        setCurrentText(texts[index]);
-    }, [index, texts])
+    useEffect(() => setCurrentText(texts[index]), [index, texts])
 
     useEffect(() => {
-        const bentoBox = setInterval(() => {
-            setBento(randomBentoBox(4, 4, 24, 12, 0.5))
-        }, 10000)
+        const bentoBox = setInterval(() => setBento(randomBentoBox(4, 4, 24, 12, 0.5)), 10000)
 
         return () => clearInterval(bentoBox)
     }, [])
