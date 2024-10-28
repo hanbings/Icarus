@@ -4,6 +4,14 @@
 
 **简直天坑**
 
+## 文档
+
+- [架构](/docs/architecture.md)
+- [Drone CI 构建工具搭建](./docs/drone-ci.md)
+- [MongoDB Replica Set 搭建](./docs/mongodb-replica-set.md)
+- [Redis Cluster 搭建](./docs/redis-cluster.md)
+- [Raft 共识算法的 Iris 实现](./docs/iris-raft.md)
+
 ## 项目
 
 项目包含满足赛题基础部分所描述的 Github Rank 应用（主程序）以及一部分用于拉取和分析 Github 数据所需要的基础设施。
