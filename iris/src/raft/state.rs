@@ -16,12 +16,22 @@ pub enum IrisRaftNodeType {
 
 #[derive(Clone)]
 pub struct IrisRaftNodeState {
+    // node
     pub node: IrisRaftNode,
     pub nodes: Vec<IrisRaftNode>,
     pub raft_node_type: IrisRaftNodeType,
+
+    // state
     pub term: usize,
-    pub data: HashMap<String, String>,
+    pub voted_for: Option<Uuid>,
     pub log: Vec<LogEntry>,
+    pub commit_index: usize,
+    pub last_applied_index: usize,
+
+    // data
+    pub data: HashMap<String, String>,
+
+    // config
     pub config: IrisRaftConfig,
 }
 
@@ -39,8 +49,11 @@ impl IrisRaftNodeState {
             nodes: Vec::new(),
             raft_node_type: Candidate,
             term: 0,
-            data: HashMap::new(),
+            voted_for: None,
             log: Vec::new(),
+            commit_index: 0,
+            last_applied_index: 0,
+            data: HashMap::new(),
             config,
         }
     }

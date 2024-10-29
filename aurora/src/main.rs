@@ -53,15 +53,12 @@ async fn main() -> std::io::Result<()> {
         ),
     )));
 
-    let save_data = Data::new(Mutex::new(HashMap::<String, String>::new()));
-
     info!("Application Running...");
     HttpServer::new(move || {
         App::new()
             .app_data(Data::clone(&clock))
             .app_data(Data::clone(&client))
             .app_data(Data::clone(&node_state))
-            .app_data(Data::clone(&save_data))
             // metadata
             .route(
                 "/cluster/node",

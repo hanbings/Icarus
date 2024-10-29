@@ -1,4 +1,5 @@
-use crate::raft::action::{AppendEntries, AppendEntriesResponse, RequestVoteResponse};
+use crate::raft::action::{AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse};
+use crate::raft::node::IrisRaftNode;
 use std::time::Duration;
 use tokio::time;
 
@@ -33,7 +34,7 @@ impl IrisRaftClient {
     pub fn send_heartbeat(
         &self,
         append_entries: AppendEntries,
-        target: Vec<String>,
+        target: Vec<IrisRaftNode>,
     ) -> AppendEntriesResponse {
         let client = reqwest::Client::new();
 
@@ -43,13 +44,20 @@ impl IrisRaftClient {
         }
     }
 
-    pub fn vote(&self, target: Vec<String>) -> RequestVoteResponse {
+    pub async fn vote(
+        &self,
+        vote_request: RequestVote,
+        target: IrisRaftNode,
+    ) -> Result<RequestVoteResponse, reqwest::Error> {
         let client = reqwest::Client::new();
-
-        RequestVoteResponse {
-            term: 0,
-            vote_granted: true,
-        }
+        client
+            .post(format!("{}/vote", target.endpoint))
+            .header("Content-Type", "application/json")
+            .body(serde_json::to_string(&vote_request).unwrap())
+            .send()
+            .await?
+            .json::<RequestVoteResponse>()
+            .await
     }
 
     /// Please use the tokio clock to perform this asynchronous task,

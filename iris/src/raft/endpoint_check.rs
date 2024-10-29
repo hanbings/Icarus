@@ -1,13 +1,14 @@
 #![allow(dead_code)]
 
-use crate::raft::action::AppendEntries;
+use crate::raft::action::{AppendEntries, RequestVote};
 use crate::raft::client::IrisRaftClient;
 use crate::raft::state::{IrisRaftClock, IrisRaftNodeState, IrisRaftNodeType};
 use actix_web::web::Data;
 use actix_web::Responder;
+use futures::stream::FuturesUnordered;
 use log::{info, log};
 use rand::Rng;
-use std::sync::Mutex;
+use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Receive clock function calls from Iris Client, ideally triggered every 100ms.
@@ -35,10 +36,10 @@ pub async fn post_check(
             let append_entries = AppendEntries {
                 term: node_state.term,
                 leader_id: node_state.node.id,
-                prev_log_index: 0,
+                prev_log_index: node_state.last_applied_index,
                 prev_log_term: 0,
                 entries: vec![],
-                leader_commit_index: 0,
+                leader_commit_index: node_state.commit_index,
             };
 
             client.send_heartbeat(append_entries, vec![]);
@@ -47,17 +48,8 @@ pub async fn post_check(
             // If the election time exceeds the timeout period tolerated by the cluster,
             // the Candidate should become a new term
             if clock.clock > clock.last_election_time + clock.current_election_timeout_size {
-                node_state.raft_node_type = IrisRaftNodeType::Candidate;
-                node_state.term += 1;
-                clock.last_election_time = clock.clock;
-                clock.current_election_timeout_size = rand::thread_rng().gen_range(
-                    node_state.config.election_timeout.0..=node_state.config.election_timeout.1,
-                );
+                request_vote(node_state, clock, client).await;
 
-                info!(
-                    "{} become Candidate, inner clock time: {}",
-                    node_state.node.id, clock.clock
-                );
                 return Ok(actix_web::web::Json(crate::message::Message::success()));
             }
         }
@@ -65,26 +57,69 @@ pub async fn post_check(
             // If the heartbeat time exceeds the timeout period tolerated by the cluster,
             // the Leader is offline.
             if clock.clock > clock.last_heartbeat_time + node_state.config.heartbeat_timeout {
-                node_state.raft_node_type = IrisRaftNodeType::Candidate;
-                node_state.term += 1;
-                clock.last_election_time = clock.clock;
-                clock.current_election_timeout_size = rand::thread_rng().gen_range(
-                    node_state.config.election_timeout.0..=node_state.config.election_timeout.1,
-                );
+                // send request vote
+                request_vote(node_state, clock, client).await;
 
-                info!(
-                    "election timeout, node id:{} become Candidate, inner clock time: {}",
-                    node_state.node.id, clock.clock
-                );
                 return Ok(actix_web::web::Json(crate::message::Message::success()));
             }
-
-            info!(
-                "node id: {} become Follower, inner clock time: {}",
-                node_state.node.id, clock.clock
-            );
         }
     }
 
     Ok(actix_web::web::Json(crate::message::Message::success()))
+}
+
+async fn request_vote<'a>(
+    mut node_state: MutexGuard<'a, IrisRaftNodeState>,
+    mut clock: MutexGuard<'a, IrisRaftClock>,
+    mut client: MutexGuard<'a, IrisRaftClient>,
+) {
+    node_state.raft_node_type = IrisRaftNodeType::Candidate;
+    node_state.term += 1;
+    node_state.voted_for = Some(node_state.node.id);
+    clock.last_election_time = clock.clock;
+    clock.current_election_timeout_size = rand::thread_rng()
+        .gen_range(node_state.config.election_timeout.0..=node_state.config.election_timeout.1);
+
+    let vote_request = RequestVote {
+        node: node_state.node.clone(),
+        term: node_state.term,
+        candidate_id: node_state.node.id,
+        last_log_index: 0,
+        last_log_term: 0,
+    };
+
+    let mut accepted_node = 0;
+
+    // send request vote
+    for node in &node_state.nodes {
+        let response = client.vote(vote_request.clone(), node.clone()).await;
+
+        if let Ok(response) = response {
+            if response.vote_granted {
+                accepted_node += 1;
+
+                if accepted_node > node_state.nodes.len() / 2 {
+                    node_state.raft_node_type = IrisRaftNodeType::Leader;
+
+                    info!(
+                        "node id:{} become Leader, inner clock time: {}, term: {}",
+                        node_state.node.id, clock.clock, node_state.term
+                    );
+
+                    let append_entries = AppendEntries {
+                        term: node_state.term,
+                        leader_id: node_state.node.id,
+                        prev_log_index: node_state.last_applied_index,
+                        prev_log_term: 0,
+                        entries: vec![],
+                        leader_commit_index: node_state.commit_index,
+                    };
+
+                    client.send_heartbeat(append_entries, node_state.nodes.clone());
+
+                    break;
+                }
+            }
+        }
+    }
 }

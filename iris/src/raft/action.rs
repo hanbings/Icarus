@@ -1,4 +1,5 @@
 use crate::raft::log::LogEntry;
+use crate::raft::node::IrisRaftNode;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -20,8 +21,9 @@ pub struct AppendEntriesResponse {
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RequestVote {
+    pub node: IrisRaftNode,
     pub term: usize,
-    pub candidate_id: usize,
+    pub candidate_id: Uuid,
     pub last_log_index: usize,
     pub last_log_term: usize,
 }
