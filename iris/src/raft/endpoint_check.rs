@@ -19,14 +19,6 @@ pub async fn post_check(
     clock: Data<Mutex<IrisRaftClock>>,
     client: Data<Mutex<IrisRaftClient>>,
 ) -> actix_web::Result<impl Responder> {
-    info!(
-        "clock: {}",
-        SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap()
-            .as_millis()
-    );
-
     let mut node_state = node_state.lock().unwrap();
     let mut clock = clock.lock().unwrap();
     let mut client = client.lock().unwrap();
@@ -81,14 +73,14 @@ pub async fn post_check(
                 );
 
                 info!(
-                    "{} become Candidate, inner clock time: {}",
+                    "election timeout, node id:{} become Candidate, inner clock time: {}",
                     node_state.node.id, clock.clock
                 );
                 return Ok(actix_web::web::Json(crate::message::Message::success()));
             }
 
             info!(
-                "{} become Follower, inner clock time: {}",
+                "node id: {} become Follower, inner clock time: {}",
                 node_state.node.id, clock.clock
             );
         }
