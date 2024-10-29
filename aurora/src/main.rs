@@ -41,38 +41,58 @@ async fn main() -> std::io::Result<()> {
     tokio::spawn(IrisRaftClient::async_clock(endpoint));
 
     info!("Initializing state...");
+    let clock = Data::new(Mutex::new(IrisRaftClock::new()));
+    let client = Data::new(Mutex::new(IrisRaftClient::new()));
     let node_state = Data::new(Mutex::new(IrisRaftNodeState::new(
         IrisRaftConfig::no_log_compaction(
             config.node,
             config.secret,
             config.endpoint,
-            2,
-            (3, 8)
+            200,
+            (300, 800),
         ),
     )));
 
-    let clock = Data::new(Mutex::new(IrisRaftClock::new()));
-    let client = Data::new(Mutex::new(ClientState {
-        config: HashMap::new(),
-        client: IrisRaftClient::new(),
-    }));
+    let save_data = Data::new(Mutex::new(HashMap::<String, String>::new()));
 
     info!("Application Running...");
     HttpServer::new(move || {
         App::new()
-            .app_data(Data::clone(&node_state))
             .app_data(Data::clone(&clock))
             .app_data(Data::clone(&client))
+            .app_data(Data::clone(&node_state))
+            .app_data(Data::clone(&save_data))
             // metadata
-            .route("/cluster/node", web::get().to(iris_irides::raft::endpoint_metadata::get_node))
-            .route("/cluster/nodes", web::get().to(iris_irides::raft::endpoint_metadata::get_nodes))
-            .route("/cluster/status", web::get().to(iris_irides::raft::endpoint_metadata::get_status))
+            .route(
+                "/cluster/node",
+                web::get().to(iris_irides::raft::endpoint_metadata::get_node),
+            )
+            .route(
+                "/cluster/nodes",
+                web::get().to(iris_irides::raft::endpoint_metadata::get_nodes),
+            )
+            .route(
+                "/cluster/status",
+                web::get().to(iris_irides::raft::endpoint_metadata::get_status),
+            )
             // check
-            .route("/cluster/check", web::post().to(iris_irides::raft::endpoint_check::post_check))
+            .route(
+                "/cluster/check",
+                web::post().to(iris_irides::raft::endpoint_check::post_check),
+            )
             // action
-            .route("/cluster/append", web::post().to(iris_irides::raft::endpoint_action::post_append))
-            .route("/cluster/commit", web::post().to(iris_irides::raft::endpoint_action::post_commit))
-            .route("/cluster/vote", web::post().to(iris_irides::raft::endpoint_action::post_vote))
+            .route(
+                "/cluster/append",
+                web::post().to(iris_irides::raft::endpoint_action::post_append),
+            )
+            .route(
+                "/cluster/commit",
+                web::post().to(iris_irides::raft::endpoint_action::post_commit),
+            )
+            .route(
+                "/cluster/vote",
+                web::post().to(iris_irides::raft::endpoint_action::post_vote),
+            )
             // config
             .route("/config", web::get().to(get_config))
             .route("/config", web::post().to(post_config))

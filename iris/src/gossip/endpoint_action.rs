@@ -1,7 +1,7 @@
 use crate::gossip::node::GossipNode;
 use crate::gossip::state::ClusterState;
 use actix_web::web::Data;
-use actix_web::{post, web, Responder, Result};
+use actix_web::{web, Responder, Result};
 use std::sync::Mutex;
 
 pub async fn post_connect(

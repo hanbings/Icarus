@@ -54,11 +54,31 @@ Raft 共识算法主要机制：
 
 Iris 实现（下称实现）使用 Rust 语言编写，并使用 Rust 高性能异步 Web 框架 Actix 作为数据传输通道。
 
+### 关键数据结构
+
+#### IrisRaftConfig
+
+```rust
+#[derive(Builder, Clone)]
+pub struct IrisRaftConfig {
+    pub node: Vec<String>,
+    pub secret: String,
+    pub endpoint: String,
+    pub heartbeat_timeout: usize,
+    pub election_timeout: (usize, usize),
+    pub log_read: fn(LogEntry) -> bool,
+    pub log_write: fn(LogEntry) -> bool,
+    pub data_read: for<'a> fn(&'a HashMap<String, String>, &'a String) -> &'a String,
+    pub data_write: fn(HashMap<String, String>, String, String) -> bool,
+    pub check_log_compaction: fn(&IrisRaftNodeState, &IrisRaftClock) -> bool,
+}
+```
+
 ### 整体流程
 
 #### 组成集群
 
-当节点启动时，计时器为 0
+当节点启动时，heartbeat 计时器为 0，
 
 #### 处理客户端的数据请求
 

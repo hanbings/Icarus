@@ -1,32 +1,33 @@
 use crate::raft::log::LogEntry;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AppendEntries {
-    term: usize,
-    leader_id: usize,
-    prev_log_index: usize,
-    prev_log_term: usize,
-    entries: Vec<LogEntry>,
-    leader_commit_index: usize,
+    pub term: usize,
+    pub leader_id: Uuid,
+    pub prev_log_index: usize,
+    pub prev_log_term: usize,
+    pub entries: Vec<LogEntry>,
+    pub leader_commit_index: usize,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AppendEntriesResponse {
-    term: usize,
-    success: bool,
+    pub term: usize,
+    pub success: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RequestVote {
-    term: usize,
-    candidate_id: usize,
-    last_log_index: usize,
-    last_log_term: usize,
+    pub term: usize,
+    pub candidate_id: usize,
+    pub last_log_index: usize,
+    pub last_log_term: usize,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct RequestVoteResponse {
-    term: usize,
-    vote_granted: bool,
+    pub term: usize,
+    pub vote_granted: bool,
 }

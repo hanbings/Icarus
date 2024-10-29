@@ -1,17 +1,56 @@
-use std::sync::Arc;
-use std::thread;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use log::info;
+use crate::raft::action::{AppendEntries, AppendEntriesResponse, RequestVoteResponse};
+use std::time::Duration;
 use tokio::time;
 
 pub struct IrisRaftClient {}
 
 #[allow(unused)]
 impl IrisRaftClient {
-    pub fn new() -> Self { Self {} }
-    pub fn send(&self, key: String, value: String) {}
-    pub fn find(&self, key: String) {}
-    pub fn delete(&self, key: String) {}
+    pub fn new() -> Self {
+        Self {}
+    }
+    pub fn send(&self, key: String, value: String) -> AppendEntriesResponse {
+        AppendEntriesResponse {
+            term: 0,
+            success: true,
+        }
+    }
+
+    pub fn find(&self, key: String) -> AppendEntriesResponse {
+        AppendEntriesResponse {
+            term: 0,
+            success: true,
+        }
+    }
+
+    pub fn delete(&self, key: String) -> AppendEntriesResponse {
+        AppendEntriesResponse {
+            term: 0,
+            success: true,
+        }
+    }
+
+    pub fn send_heartbeat(
+        &self,
+        append_entries: AppendEntries,
+        target: Vec<String>,
+    ) -> AppendEntriesResponse {
+        let client = reqwest::Client::new();
+
+        AppendEntriesResponse {
+            term: 0,
+            success: true,
+        }
+    }
+
+    pub fn vote(&self, target: Vec<String>) -> RequestVoteResponse {
+        let client = reqwest::Client::new();
+
+        RequestVoteResponse {
+            term: 0,
+            vote_granted: true,
+        }
+    }
 
     /// Please use the tokio clock to perform this asynchronous task,
     /// which will time the request execution timeout logic
@@ -30,7 +69,7 @@ impl IrisRaftClient {
     pub async fn async_clock(endpoint: String) {
         loop {
             // TODO: Stupid clone()... :(
-            thread::spawn(Self::async_clock_task(endpoint.clone()));
+            tokio::spawn(Self::async_clock_task(endpoint.clone()));
 
             time::sleep(Duration::from_millis(100)).await;
         }

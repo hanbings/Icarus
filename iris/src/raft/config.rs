@@ -9,8 +9,8 @@ pub struct IrisRaftConfig {
     pub node: Vec<String>,
     pub secret: String,
     pub endpoint: String,
-    pub heartbeat_timeout: usize,
-    pub election_timeout: (usize, usize),
+    pub heartbeat_timeout: u128,
+    pub election_timeout: (u128, u128),
     pub log_read: fn(LogEntry) -> bool,
     pub log_write: fn(LogEntry) -> bool,
     pub data_read: for<'a> fn(&'a HashMap<String, String>, &'a String) -> &'a String,
@@ -23,8 +23,8 @@ impl IrisRaftConfig {
         node: Vec<String>,
         secret: String,
         endpoint: String,
-        heartbeat_timeout: usize,
-        election_timeout: (usize, usize)
+        heartbeat_timeout: u128,
+        election_timeout: (u128, u128),
     ) -> Self {
         Self {
             node,
@@ -33,9 +33,7 @@ impl IrisRaftConfig {
             election_timeout,
             log_write: |_log| true,
             log_read: |_log| true,
-            data_read: |data, key| {
-                data.get(key).unwrap()
-            },
+            data_read: |data, key| data.get(key).unwrap(),
             data_write: |mut data, key, value| {
                 let result = data.insert(key, value);
                 result.is_some()
