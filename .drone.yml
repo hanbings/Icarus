@@ -17,7 +17,7 @@ steps:
       - npm run build
 
   - name: starplex-web-push
-    image: plugin/docker
+    image: plugins/docker
     depends_on: [ starplex-wbe-build ]
     settings:
       registry: registry.icaruspw.dev
