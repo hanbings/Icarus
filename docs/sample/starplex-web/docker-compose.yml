@@ -1,0 +1,18 @@
+services:
+  starplex-web:
+    image: registry.icaruspw.dev/icarus/starplex-web
+    container_name: starplex-web
+    ports:
+      - "60000:80"
+    restart: always
+
+  auto-update:
+    image: containrrr/watchtower
+    container_name: starplex-web-auto-update
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 3600 --cleanup --remove-volumes
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_REMOVE_VOLUMES=true
+  

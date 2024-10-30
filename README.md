@@ -10,7 +10,9 @@
 - [Drone CI 构建工具搭建](./docs/drone-ci.md)
 - [MongoDB Replica Set 搭建](./docs/mongodb-replica-set.md)
 - [Redis Cluster 搭建](./docs/redis-cluster.md)
+- [CI / CD 构建系统与自动化部署系统](./docs/ci-cd.md)
 - [Raft 共识算法的 Iris 实现](./docs/iris-raft.md)
+- [随机构建 Bento Box 网格](./docs/build-a-random-bento-box-grip.md)
 
 ## 项目
 
