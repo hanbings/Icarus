@@ -3,22 +3,22 @@ type: docker
 name: Icarus
 
 steps:
-  - name: Starplex Build
+  - name: starplex-build
     image: gradle:jdk21
     commands:
       - cd starplex
       - gradle bootJar -x test
 
-  - name: Starplex Wbe Build
+  - name: starplex-wbe-build
     image: node:22
     commands:
       - cd starplex-web
       - npm install
       - npm run build
 
-  - name: Starplex Web Push
+  - name: starplex-web-push
     image: plugin/docker
-    depends_on: [ 'Starplex Web Build' ]
+    depends_on: [ starplex-wbe-build ]
     settings:
       registry: registry.icaruspw.dev
       repo: registry.icaruspw.dev/icarus/starplex-web
