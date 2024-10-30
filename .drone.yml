@@ -1,0 +1,30 @@
+kind: pipeline
+type: docker
+name: Icarus
+
+steps:
+  - name: Starplex Build
+    image: gradle:jdk21
+    commands:
+      - cd starplex
+      - gradle bootJar -x test
+
+  - name: Starplex Wbe Build
+    image: node:22
+    commands:
+      - cd starplex-web
+      - npm install
+      - npm run build
+
+  - name: Starplex Web Push
+    image: plugin/docker
+    depends_on: [ 'Starplex Web Build' ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/starplex-web
+      dockerfile: starplex-web/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
