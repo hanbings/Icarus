@@ -2,30 +2,10 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum LogEntry {
-    LogSaveEntry,
-    LogUpdateEntry,
-    LogDeleteEntry,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct LogSaveEntry {
-    index: usize,
-    term: usize,
-    key: String,
-    value: String,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct LogUpdateEntry {
-    index: usize,
-    term: usize,
-    key: String,
-    value: String,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct LogDeleteEntry {
-    index: usize,
-    term: usize,
-    key: String,
+    // index term key value
+    LogSaveEntry(usize, usize, String, String),
+    // index term key value
+    LogUpdateEntry(usize, usize, String, String),
+    // index term key
+    LogDeleteEntry(usize, usize, String),
 }

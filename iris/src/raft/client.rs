@@ -1,63 +1,62 @@
-use crate::raft::action::{AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse};
-use crate::raft::node::IrisRaftNode;
+use crate::raft::endpoint_action::DataResponse;
+use crate::raft::log::LogEntry;
 use std::time::Duration;
 use tokio::time;
 
-pub struct IrisRaftClient {}
+pub struct IrisRaftClient {
+    endpoint: String,
+}
 
 #[allow(unused)]
 impl IrisRaftClient {
-    pub fn new() -> Self {
-        Self {}
+    pub fn new(endpoint: String) -> Self {
+        Self { endpoint }
     }
-    pub fn send(&self, key: String, value: String) -> AppendEntriesResponse {
-        AppendEntriesResponse {
-            term: 0,
-            success: true,
-        }
-    }
-
-    pub fn find(&self, key: String) -> AppendEntriesResponse {
-        AppendEntriesResponse {
-            term: 0,
-            success: true,
-        }
-    }
-
-    pub fn delete(&self, key: String) -> AppendEntriesResponse {
-        AppendEntriesResponse {
-            term: 0,
-            success: true,
-        }
-    }
-
-    pub fn send_heartbeat(
-        &self,
-        append_entries: AppendEntries,
-        target: Vec<IrisRaftNode>,
-    ) -> AppendEntriesResponse {
+    pub async fn save(&self, key: String, value: String) {
         let client = reqwest::Client::new();
+        let entries = vec![{ LogEntry::LogSaveEntry(0, 0, key.clone(), value.clone()) }];
 
-        AppendEntriesResponse {
-            term: 0,
-            success: true,
-        }
-    }
-
-    pub async fn vote(
-        &self,
-        vote_request: RequestVote,
-        target: IrisRaftNode,
-    ) -> Result<RequestVoteResponse, reqwest::Error> {
-        let client = reqwest::Client::new();
-        client
-            .post(format!("{}/vote", target.endpoint))
-            .header("Content-Type", "application/json")
-            .body(serde_json::to_string(&vote_request).unwrap())
+        let _ = client
+            .post(format!("{}/commit", self.endpoint))
+            .json(&serde_json::json!(entries))
             .send()
-            .await?
-            .json::<RequestVoteResponse>()
+            .await;
+    }
+
+    pub async fn update(&self, key: String, value: String) {
+        let client = reqwest::Client::new();
+        let entries = vec![{ LogEntry::LogUpdateEntry(0, 0, key.clone(), value.clone()) }];
+
+        let _ = client
+            .post(format!("{}/commit", self.endpoint))
+            .json(&serde_json::json!(entries))
+            .send()
+            .await;
+    }
+
+    pub async fn delete(&self, key: String) {
+        let client = reqwest::Client::new();
+        let entries = vec![{ LogEntry::LogDeleteEntry(0, 0, key.clone()) }];
+
+        let _ = client
+            .post(format!("{}/commit", self.endpoint))
+            .json(&serde_json::json!(entries))
+            .send()
+            .await;
+    }
+
+    pub async fn find(&self, key: String) -> String {
+        let client = reqwest::Client::new();
+        let response = client
+            .post(format!("{}/find", self.endpoint))
+            .json(&serde_json::json!(key))
+            .send()
             .await
+            .unwrap();
+
+        let data = response.json::<DataResponse>().await.unwrap();
+
+        data.data
     }
 
     /// Please use the tokio clock to perform this asynchronous task,

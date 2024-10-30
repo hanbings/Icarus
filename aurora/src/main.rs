@@ -1,5 +1,5 @@
 use crate::endpoint_config::{delete_config, get_config, post_config, update_config};
-use actix_web::web::{to, Data};
+use actix_web::web::Data;
 use actix_web::{web, App, HttpServer};
 use endpoint_config::get_config_by_id;
 use endpoint_metadata::status;
@@ -9,20 +9,12 @@ use iris_irides::raft::client::IrisRaftClient;
 use iris_irides::raft::config::IrisRaftConfig;
 use iris_irides::raft::state::{IrisRaftClock, IrisRaftNodeState};
 use log::info;
-use std::collections::HashMap;
 use std::env::set_var;
 use std::sync::Mutex;
-use std::time::Duration;
-use tokio::time;
 
 mod config;
 mod endpoint_config;
 mod endpoint_metadata;
-
-pub struct ClientState {
-    config: HashMap<String, String>,
-    client: IrisRaftClient,
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -42,10 +34,10 @@ async fn main() -> std::io::Result<()> {
 
     info!("Initializing state...");
     let clock = Data::new(Mutex::new(IrisRaftClock::new()));
-    let client = Data::new(Mutex::new(IrisRaftClient::new()));
+    let client = Data::new(Mutex::new(IrisRaftClient::new(config.endpoint.clone())));
     let node_state = Data::new(Mutex::new(IrisRaftNodeState::new(
         IrisRaftConfig::no_log_compaction(
-            config.node,
+            config.id,
             config.secret,
             config.endpoint,
             200,

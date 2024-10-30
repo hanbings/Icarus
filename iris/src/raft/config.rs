@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 #[derive(Builder, Clone)]
 pub struct IrisRaftConfig {
-    pub node: Vec<String>,
+    pub id: String,
     pub secret: String,
     pub endpoint: String,
     pub heartbeat_timeout: u128,
@@ -20,14 +20,14 @@ pub struct IrisRaftConfig {
 
 impl IrisRaftConfig {
     pub fn no_log_compaction(
-        node: Vec<String>,
+        id: String,
         secret: String,
         endpoint: String,
         heartbeat_timeout: u128,
         election_timeout: (u128, u128),
     ) -> Self {
         Self {
-            node,
+            id,
             secret,
             heartbeat_timeout,
             election_timeout,

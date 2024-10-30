@@ -1,25 +1,185 @@
 #![allow(dead_code)]
-
-use crate::raft::action::{RequestVote, RequestVoteResponse};
-use crate::raft::state::{IrisRaftClock, IrisRaftNodeState};
+use crate::raft::action::{AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse};
+use crate::raft::log::LogEntry;
+use crate::raft::state::{IrisRaftClock, IrisRaftNodeState, IrisRaftNodeType};
 use actix_web::web::Data;
 use actix_web::{web, Responder};
 use log::info;
-use std::sync::Mutex;
+use serde::{Deserialize, Serialize};
+use std::sync::{Mutex, MutexGuard};
+use std::time::{SystemTime, UNIX_EPOCH};
 
-pub async fn post_append() -> actix_web::Result<impl Responder> {
-    Ok(actix_web::web::Json({}))
+pub async fn post_append(
+    node_state: Data<Mutex<IrisRaftNodeState>>,
+    clock: Data<Mutex<IrisRaftClock>>,
+    append_entries: web::Json<AppendEntries>,
+) -> actix_web::Result<impl Responder> {
+    let mut node_state = node_state.lock().unwrap();
+    let mut clock = clock.lock().unwrap();
+
+    match node_state.raft_node_type {
+        IrisRaftNodeType::Follower => {
+            if append_entries.term < node_state.term {
+                let response = AppendEntriesResponse {
+                    term: node_state.term,
+                    success: false,
+                };
+
+                return Ok(web::Json(serde_json::json!(response)));
+            }
+
+            let node_state = handler_entries(node_state, append_entries).await;
+            clock.clock = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis();
+
+            let response = AppendEntriesResponse {
+                term: node_state.term,
+                success: true,
+            };
+            Ok(web::Json(serde_json::json!(response)))
+        }
+        IrisRaftNodeType::Candidate => {
+            if append_entries.term > node_state.term {
+                node_state.term = append_entries.term;
+                node_state.raft_node_type = IrisRaftNodeType::Follower;
+                node_state.leader_id = Some(append_entries.leader_id.clone());
+
+                clock.clock = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis();
+
+                let response = RequestVoteResponse {
+                    term: node_state.term,
+                    vote_granted: false,
+                };
+
+                return Ok(web::Json(serde_json::json!(response)));
+            }
+
+            let response = AppendEntriesResponse {
+                term: node_state.term,
+                success: false,
+            };
+
+            Ok(web::Json(serde_json::json!(response)))
+        }
+        IrisRaftNodeType::Leader => {
+            if append_entries.term > node_state.term {
+                node_state.term = append_entries.term;
+                node_state.raft_node_type = IrisRaftNodeType::Follower;
+                node_state.leader_id = Some(append_entries.leader_id.clone());
+
+                clock.clock = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis();
+
+                let response = RequestVoteResponse {
+                    term: node_state.term,
+                    vote_granted: false,
+                };
+
+                return Ok(web::Json(serde_json::json!(response)));
+            }
+
+            // handler append entries
+            let node_state = handler_entries(node_state, append_entries).await;
+
+            let response = AppendEntriesResponse {
+                term: node_state.term,
+                success: true,
+            };
+            Ok(web::Json(serde_json::json!(response)))
+        }
+    }
 }
-pub async fn post_commit() -> actix_web::Result<impl Responder> {
-    Ok(actix_web::web::Json({}))
+
+pub async fn post_commit(
+    node_state: Data<Mutex<IrisRaftNodeState>>,
+    log_entries: web::Json<Vec<LogEntry>>,
+) -> actix_web::Result<impl Responder> {
+    let node_state = node_state.lock().unwrap();
+
+    // ignore index and term from log entries
+    let append_entries = AppendEntries {
+        term: node_state.term,
+        leader_id: node_state.node.id.clone(),
+        prev_log_index: node_state.last_applied_index,
+        prev_log_term: 0,
+        entries: log_entries.0,
+        leader_commit_index: node_state.commit_index,
+    };
+
+    match node_state.raft_node_type {
+        IrisRaftNodeType::Leader => {
+            // handler append entries
+            let node_state = handler_entries(node_state, web::Json(append_entries.clone())).await;
+
+            // send append entries
+            for node in &node_state.nodes {
+                let client = reqwest::Client::new();
+                client
+                    .post(format!("{}/append-entries", node.endpoint))
+                    .header("Content-Type", "application/json")
+                    .body(serde_json::to_string(&append_entries)?)
+                    .send()
+                    .await
+                    .unwrap();
+            }
+        }
+        IrisRaftNodeType::Follower => {
+            // send append entries
+            for node in &node_state.nodes {
+                let client = reqwest::Client::new();
+                client
+                    .post(format!("{}/append-entries", node.endpoint))
+                    .header("Content-Type", "application/json")
+                    .body(serde_json::to_string(&append_entries)?)
+                    .send()
+                    .await
+                    .unwrap();
+            }
+
+            return Ok(web::Json({}));
+        }
+        IrisRaftNodeType::Candidate => {
+            return Ok(web::Json({}));
+        }
+    }
+
+    Ok(web::Json({}))
 }
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct GetData {
+    pub key: String,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct DataResponse {
+    pub data: String,
+}
+
+pub async fn get_data(
+    node_state: Data<Mutex<IrisRaftNodeState>>,
+    get_data: web::Json<GetData>,
+) -> actix_web::Result<impl Responder> {
+    let node_state = node_state.lock().unwrap();
+    let data = node_state.data.get(&get_data.key).unwrap();
+
+    Ok(web::Json(DataResponse { data: data.clone() }))
+}
+
 pub async fn post_vote(
     node_state: Data<Mutex<IrisRaftNodeState>>,
     clock: Data<Mutex<IrisRaftClock>>,
     vote_request: web::Json<RequestVote>,
 ) -> actix_web::Result<impl Responder> {
-    let mut node_state = node_state.lock().unwrap();
-    let mut clock = clock.lock().unwrap();
+    let node_state = node_state.lock().unwrap();
+    let clock = clock.lock().unwrap();
 
     // the node is not in the cluster
     if node_state
@@ -70,4 +230,34 @@ pub async fn post_vote(
     );
 
     Ok(web::Json(serde_json::json!(response)))
+}
+
+pub async fn handler_entries<'a>(
+    mut node_state: MutexGuard<'a, IrisRaftNodeState>,
+    append_entries: web::Json<AppendEntries>,
+) -> MutexGuard<'a, IrisRaftNodeState> {
+    append_entries.entries.iter().for_each(|entry| match entry {
+        LogEntry::LogSaveEntry(index, term, key, value) => {
+            if index > &node_state.log.len() {
+                node_state.log[*index] =
+                    LogEntry::LogSaveEntry(*index, *term, key.clone(), value.clone());
+                node_state.data.insert(key.clone(), value.clone());
+            }
+        }
+        LogEntry::LogUpdateEntry(index, term, key, value) => {
+            if index > &node_state.log.len() {
+                node_state.log[*index] =
+                    LogEntry::LogUpdateEntry(*index, *term, key.clone(), value.clone());
+                node_state.data.insert(key.clone(), value.clone());
+            }
+        }
+        LogEntry::LogDeleteEntry(index, term, key) => {
+            if index > &node_state.log.len() {
+                node_state.log[*index] = LogEntry::LogDeleteEntry(*index, *term, key.clone());
+                node_state.data.remove(key);
+            }
+        }
+    });
+
+    node_state
 }

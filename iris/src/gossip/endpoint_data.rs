@@ -4,20 +4,20 @@ use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct DataKey {
-    key: String,
+pub struct DataKey {
+    pub key: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Data {
-    key: String,
-    value: String,
+pub struct Data {
+    pub key: String,
+    pub value: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Message {
-    message: String,
-    code: i32,
+pub struct Message {
+    pub message: String,
+    pub code: i32,
 }
 
 pub async fn get_data(
