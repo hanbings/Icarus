@@ -308,7 +308,6 @@ dependencies = [
  "actix-web",
  "env_logger",
  "figment",
- "futures",
  "iris",
  "log",
  "reqwest",
