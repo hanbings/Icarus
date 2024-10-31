@@ -1,5 +1,8 @@
 ip = "0.0.0.0"
 port = 10086
+id = "aurora"
 endpoint = "http://127.0.0.1:10086/cluster"
-id = []
 secret = "ce38ee76-b0ee-dcf3-d4f6-641a12d951dc"
+nodes = [
+
+]

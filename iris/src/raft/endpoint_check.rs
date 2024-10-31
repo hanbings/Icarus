@@ -32,7 +32,7 @@ pub async fn post_check(
             // send heartbeat
             let append_entries = AppendEntries {
                 term: node_state.term,
-                leader_id: node_state.node.id.clone(),
+                leader_endpoint: node_state.node.endpoint.clone(),
                 prev_log_index: node_state.last_applied_index,
                 prev_log_term: 0,
                 entries: vec![],
@@ -85,7 +85,7 @@ async fn request_vote<'a>(
     let vote_request = RequestVote {
         node: node_state.node.clone(),
         term: node_state.term,
-        candidate_id: node_state.node.id.clone(),
+        candidate_endpoint: node_state.node.endpoint.clone(),
         last_log_index: 0,
         last_log_term: 0,
     };
@@ -110,7 +110,7 @@ async fn request_vote<'a>(
 
                     let append_entries = AppendEntries {
                         term: node_state.term,
-                        leader_id: node_state.node.id.clone(),
+                        leader_endpoint: node_state.node.endpoint.clone(),
                         prev_log_index: node_state.last_applied_index,
                         prev_log_term: 0,
                         entries: vec![],

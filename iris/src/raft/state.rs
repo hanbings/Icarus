@@ -18,7 +18,7 @@ pub struct IrisRaftNodeState {
     // node
     pub node: IrisRaftNode,
     pub nodes: Vec<IrisRaftNode>,
-    pub leader_id: Option<String>,
+    pub leader_endpoint: Option<String>,
     pub raft_node_type: IrisRaftNodeType,
 
     // state
@@ -48,7 +48,7 @@ impl IrisRaftNodeState {
             },
             nodes: Vec::new(),
             raft_node_type: Candidate,
-            leader_id: None,
+            leader_endpoint: None,
             term: 0,
             voted_for: None,
             log: Vec::new(),

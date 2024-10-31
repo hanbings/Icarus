@@ -44,7 +44,7 @@ pub async fn post_append(
             if append_entries.term > node_state.term {
                 node_state.term = append_entries.term;
                 node_state.raft_node_type = IrisRaftNodeType::Follower;
-                node_state.leader_id = Some(append_entries.leader_id.clone());
+                node_state.leader_endpoint = Some(append_entries.leader_endpoint.clone());
 
                 clock.clock = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
@@ -70,7 +70,7 @@ pub async fn post_append(
             if append_entries.term > node_state.term {
                 node_state.term = append_entries.term;
                 node_state.raft_node_type = IrisRaftNodeType::Follower;
-                node_state.leader_id = Some(append_entries.leader_id.clone());
+                node_state.leader_endpoint = Some(append_entries.leader_endpoint.clone());
 
                 clock.clock = SystemTime::now()
                     .duration_since(UNIX_EPOCH)
@@ -106,7 +106,7 @@ pub async fn post_commit(
     // ignore index and term from log entries
     let append_entries = AppendEntries {
         term: node_state.term,
-        leader_id: node_state.node.id.clone(),
+        leader_endpoint: node_state.node.endpoint.clone(),
         prev_log_index: node_state.last_applied_index,
         prev_log_term: 0,
         entries: log_entries.0,
@@ -131,17 +131,22 @@ pub async fn post_commit(
             }
         }
         IrisRaftNodeType::Follower => {
-            // send append entries
-            for node in &node_state.nodes {
-                let client = reqwest::Client::new();
-                client
-                    .post(format!("{}/append-entries", node.endpoint))
-                    .header("Content-Type", "application/json")
-                    .body(serde_json::to_string(&append_entries)?)
-                    .send()
-                    .await
-                    .unwrap();
+            if node_state.leader_endpoint.is_none() {
+                return Ok(web::Json({}));
             }
+
+            // send append entries to leader
+            let client = reqwest::Client::new();
+            client
+                .post(format!(
+                    "{}/append-entries",
+                    node_state.leader_endpoint.clone().unwrap()
+                ))
+                .header("Content-Type", "application/json")
+                .body(serde_json::to_string(&append_entries)?)
+                .send()
+                .await
+                .unwrap();
 
             return Ok(web::Json({}));
         }

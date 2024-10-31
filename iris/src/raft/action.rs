@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Serialize, Deserialize)]
 pub struct AppendEntries {
     pub term: usize,
-    pub leader_id: String,
+    pub leader_endpoint: String,
     pub prev_log_index: usize,
     pub prev_log_term: usize,
     pub entries: Vec<LogEntry>,
@@ -22,7 +22,7 @@ pub struct AppendEntriesResponse {
 pub struct RequestVote {
     pub node: IrisRaftNode,
     pub term: usize,
-    pub candidate_id: String,
+    pub candidate_endpoint: String,
     pub last_log_index: usize,
     pub last_log_term: usize,
 }
