@@ -9,6 +9,19 @@ steps:
       - cd starplex
       - gradle bootJar -x test
 
+  - name: starplex-push
+    image: plugins/docker
+    depends_on: [ starplex-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/starplex
+      dockerfile: starplex/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
+
   - name: starplex-wbe-build
     image: node:22
     commands:
