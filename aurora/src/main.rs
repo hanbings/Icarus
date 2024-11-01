@@ -36,6 +36,7 @@ async fn main() -> std::io::Result<()> {
     let clock = Data::new(Mutex::new(IrisRaftClock::new()));
     let client = Data::new(Mutex::new(IrisRaftClient::new(config.endpoint.clone())));
     let node_state = Data::new(Mutex::new(IrisRaftNodeState::new(
+        config.nodes.clone(),
         IrisRaftConfig::no_log_compaction(
             config.id,
             config.secret,

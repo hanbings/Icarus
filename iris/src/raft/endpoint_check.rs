@@ -39,7 +39,9 @@ pub async fn post_check(
                 leader_commit_index: node_state.commit_index,
             };
 
-            send_heartbeat(append_entries, vec![]).await;
+            for node in &node_state.nodes {
+                send_heartbeat(append_entries.clone(), node.clone()).await;
+            }
         }
         IrisRaftNodeType::Candidate => {
             // If the election time exceeds the timeout period tolerated by the cluster,
@@ -117,7 +119,9 @@ async fn request_vote<'a>(
                         leader_commit_index: node_state.commit_index,
                     };
 
-                    send_heartbeat(append_entries, node_state.nodes.clone()).await;
+                    for node in &node_state.nodes {
+                        send_heartbeat(append_entries.clone(), node.clone()).await;
+                    }
 
                     break;
                 }
@@ -143,11 +147,11 @@ async fn vote(
 
 async fn send_heartbeat(
     append_entries: AppendEntries,
-    target: Vec<IrisRaftNode>,
+    target: IrisRaftNode,
 ) -> AppendEntriesResponse {
     let client = reqwest::Client::new();
     client
-        .post(format!("{}/append-entries", target[0].endpoint))
+        .post(format!("{}/append-entries", target.endpoint))
         .header("Content-Type", "application/json")
         .body(serde_json::to_string(&append_entries).unwrap())
         .send()
@@ -155,10 +159,5 @@ async fn send_heartbeat(
         .unwrap()
         .json::<AppendEntriesResponse>()
         .await
-        .unwrap();
-
-    AppendEntriesResponse {
-        term: 0,
-        success: true,
-    }
+        .unwrap()
 }

@@ -4,7 +4,6 @@ use crate::raft::node::IrisRaftNode;
 use crate::raft::state::IrisRaftNodeType::Candidate;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::time::{SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub enum IrisRaftNodeType {
@@ -36,17 +35,13 @@ pub struct IrisRaftNodeState {
 }
 
 impl IrisRaftNodeState {
-    pub fn new(config: IrisRaftConfig) -> Self {
+    pub fn new(nodes: Vec<IrisRaftNode>, config: IrisRaftConfig) -> Self {
         Self {
             node: IrisRaftNode {
                 id: config.id.clone(),
-                created_by: SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis(),
                 endpoint: config.endpoint.clone(),
             },
-            nodes: Vec::new(),
+            nodes,
             raft_node_type: Candidate,
             leader_endpoint: None,
             term: 0,
