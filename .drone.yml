@@ -22,7 +22,7 @@ steps:
       auto_tag: true
       use_cache: true
 
-  - name: starplex-wbe-build
+  - name: starplex-web-build
     image: node:22
     commands:
       - cd starplex-web
@@ -31,7 +31,7 @@ steps:
 
   - name: starplex-web-push
     image: plugins/docker
-    depends_on: [ starplex-wbe-build ]
+    depends_on: [ starplex-web-build ]
     settings:
       registry: registry.icaruspw.dev
       repo: registry.icaruspw.dev/icarus/starplex-web
@@ -70,7 +70,7 @@ steps:
 
   - name: ceres-web-push
     image: plugins/docker
-    depends_on: [ starplex-wbe-build ]
+    depends_on: [ ceres-web-build ]
     settings:
       registry: registry.icaruspw.dev
       repo: registry.icaruspw.dev/icarus/ceres-web
