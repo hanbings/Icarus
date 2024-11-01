@@ -17,6 +17,7 @@ func main() {
 	}
 
 	router := gin.Default()
+	router.Use(Cors())
 	router.GET("/", GetStatus)
 	router.GET("/services", GetServices)
 	router.GET("/status", GetStatus)
