@@ -41,3 +41,36 @@ steps:
         from_secret: REGISTRY_PASSWORD
       auto_tag: true
       use_cache: true
+
+  - name: ceres-build
+    image: golang:1.23.2-alpine3.20
+    commands:
+      - cd ceres
+      - go build -o ceres .
+
+  - name: ceres-push
+    image: plugins/docker
+    depends_on: [ ceres-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/ceres
+      dockerfile: ceres/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
+
+  - name: iris-build
+    image: rust:1.82.0-bookworm
+    depends_on: [ starplex-push, starplex-web-push, ceres-push ]
+    commands:
+      - cd iris
+      - cargo build --release
+
+  - name: aurora-build
+    image: rust:1.82.0-bookworm
+    depends_on: [ iris-build ]
+    commands:
+      - cd aurora
+      - cargo build --release
