@@ -1,0 +1,26 @@
+name: Ceres Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: "! contains(github.event.head_commit.message, '#Skip')"
+    defaults:
+      run:
+        working-directory: 'ceres'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go 1.23
+        uses: actions/setup-go@v5
+          with:
+            go-version: '1.23.2'
+      
+      - name: Build with Go (build)
+        run: go build

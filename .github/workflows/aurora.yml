@@ -1,0 +1,53 @@
+name: Aurora Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    name: cargo check (aurora)
+    runs-on: ubuntu-latest
+    if: "! contains(github.event.head_commit.message, '#Skip')"
+    defaults:
+      run:
+        working-directory: 'aurora'
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install `rust` toolchain
+        run: |
+          ## Install `rust` toolchain
+          rustup toolchain install stable --no-self-update -c rustfmt --profile minimal
+          rustup default stable
+
+      - name: cargo check
+        run: |
+          cargo check --all --all-features
+
+  fmt:
+    name: cargo fmt --all -- --check (aurora)
+    runs-on: ubuntu-latest
+    if: "! contains(github.event.head_commit.message, '#Skip')"
+    defaults:
+      run:
+        working-directory: 'aurora'
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install `rust` toolchain
+        run: |
+          ## Install `rust` toolchain
+          rustup toolchain install stable --no-self-update -c rustfmt --profile minimal
+          rustup default stable
+
+      
+      - run: rustup component add rustfmt
+      
+      - name: cargo fmt
+        run: |
+          cargo fmt --all -- --check
