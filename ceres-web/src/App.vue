@@ -3,7 +3,7 @@ import {useQuery} from "@tanstack/vue-query";
 import axios from "axios";
 import {Service} from "./types.ts";
 
-const getServices = (): Promise<Group[]> =>
+const getServices = (): Promise<Map<string, Service>> =>
     axios.get("https://api.status.icaruspw.dev/services").then((response) => response.data as Map<string, Service>)
 
 const {data, isSuccess} = useQuery({queryKey: ["services"], queryFn: getServices})
