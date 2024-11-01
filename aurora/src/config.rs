@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use iris_irides::raft::node::IrisRaftNode;
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Config {
