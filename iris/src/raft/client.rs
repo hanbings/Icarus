@@ -1,6 +1,9 @@
 use crate::raft::endpoint_action::DataResponse;
 use crate::raft::log::LogEntry;
 use std::time::Duration;
+use log::info;
+use reqwest::ClientBuilder;
+use tokio::net::windows::named_pipe::PipeEnd::Client;
 use tokio::time;
 
 pub struct IrisRaftClient {
@@ -83,7 +86,7 @@ impl IrisRaftClient {
     }
 
     async fn async_clock_task(endpoint: String) {
-        let client = reqwest::Client::new();
+        let client = ClientBuilder::new().timeout(Duration::from_secs(1)).build().unwrap();
         client.post(format!("{}/check", endpoint)).send().await;
     }
 }

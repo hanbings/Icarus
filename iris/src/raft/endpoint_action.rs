@@ -183,8 +183,47 @@ pub async fn post_vote(
     clock: Data<Mutex<IrisRaftClock>>,
     vote_request: web::Json<RequestVote>,
 ) -> actix_web::Result<impl Responder> {
-    let node_state = node_state.lock().unwrap();
-    let clock = clock.lock().unwrap();
+    let mut node_state = node_state.lock().unwrap();
+    let mut clock = clock.lock().unwrap();
+
+    match node_state.raft_node_type {
+        IrisRaftNodeType::Leader => {
+            if vote_request.term > node_state.term {
+                node_state.raft_node_type = IrisRaftNodeType::Follower;
+                node_state.term = vote_request.term;
+                node_state.leader_endpoint = Some(vote_request.node.endpoint.clone());
+                clock.clock = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_millis();
+
+                info!(
+                    "node endpoint:{} get vote from node endpoint:{} but vote request term is bigger, to Follower, clock time: {}",
+                    node_state.node.endpoint, vote_request.node.endpoint, clock.clock
+                );
+
+                let response = RequestVoteResponse {
+                    term: node_state.term,
+                    vote_granted: true,
+                };
+
+                return Ok(web::Json(serde_json::json!(response)));
+            }
+
+            info!(
+                "node endpoint:{} get vote from node endpoint:{} and reject it, clock time: {}",
+                node_state.node.endpoint, vote_request.node.endpoint, clock.clock
+            );
+
+            let response = RequestVoteResponse {
+                term: 0,
+                vote_granted: false,
+            };
+
+            return Ok(web::Json(serde_json::json!(response)));
+        },
+        _ => { },
+    }
 
     // the node is not in the cluster
     if node_state
@@ -230,8 +269,8 @@ pub async fn post_vote(
     };
 
     info!(
-        "node id:{} get vote from node id:{} and vote it, clock time: {}",
-        node_state.node.id, vote_request.node.id, clock.clock
+        "node endpoint:{} get vote from node endpoint:{} and vote it, clock time: {}",
+        node_state.node.endpoint, vote_request.node.endpoint, clock.clock
     );
 
     Ok(web::Json(serde_json::json!(response)))

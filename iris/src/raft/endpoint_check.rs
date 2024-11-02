@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 
+use std::result;
 use crate::raft::action::{AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse};
 use crate::raft::node::IrisRaftNode;
 use crate::raft::state::{IrisRaftClock, IrisRaftNodeState, IrisRaftNodeType};
@@ -8,7 +9,9 @@ use actix_web::Responder;
 use log::info;
 use rand::Rng;
 use std::sync::{Mutex, MutexGuard};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use reqwest::ClientBuilder;
+use tokio::select;
 
 /// Receive clock function calls from Iris Client, ideally triggered every 100ms.
 ///
@@ -40,14 +43,39 @@ pub async fn post_check(
             };
 
             for node in &node_state.nodes {
-                send_heartbeat(append_entries.clone(), node.clone()).await;
+                if node.endpoint == node_state.node.endpoint {
+                    continue;
+                }
+
+                let heartbeat = async {
+                    send_heartbeat(append_entries.clone(), node.clone())
+                };
+
+                let result = select! {
+                    result = heartbeat => result,
+                    _ = tokio::time::sleep(Duration::from_secs(3)) => {
+                        return Ok(actix_web::web::Json(crate::message::Message::success()));
+                    }
+                };
             }
         }
         IrisRaftNodeType::Candidate => {
             // If the election time exceeds the timeout period tolerated by the cluster,
             // the Candidate should become a new term
             if clock.clock > clock.last_election_time + clock.current_election_timeout_size {
-                request_vote(node_state, clock).await;
+                let (result, mut node_state,mut clock) = request_vote(node_state, clock).await;
+
+                if !result {
+                    node_state.raft_node_type = IrisRaftNodeType::Leader;
+                    clock.last_heartbeat_time = clock.clock;
+
+                    info!(
+                        "node endpoint:{} become Leader, inner clock time: {}, term: {}",
+                        node_state.node.endpoint, clock.clock, node_state.term
+                    );
+
+                    return Ok(actix_web::web::Json(crate::message::Message::success()));
+                }
 
                 return Ok(actix_web::web::Json(crate::message::Message::success()));
             }
@@ -67,10 +95,11 @@ pub async fn post_check(
     Ok(actix_web::web::Json(crate::message::Message::success()))
 }
 
+/// return (result, is_has_other_leader, node_state, clock)
 async fn request_vote<'a>(
     mut node_state: MutexGuard<'a, IrisRaftNodeState>,
     mut clock: MutexGuard<'a, IrisRaftClock>,
-) {
+) -> (bool, MutexGuard<'a, IrisRaftNodeState>, MutexGuard<'a, IrisRaftClock>) {
     node_state.raft_node_type = IrisRaftNodeType::Candidate;
     node_state.term += 1;
     node_state.voted_for = Some(node_state.node.id.clone());
@@ -81,7 +110,13 @@ async fn request_vote<'a>(
     if node_state.nodes.is_empty() || node_state.nodes.len() == 1 {
         node_state.raft_node_type = IrisRaftNodeType::Leader;
         clock.last_heartbeat_time = clock.clock;
-        return;
+
+        info!(
+            "node endpoint:{} become Leader, inner clock time: {}, term: {}",
+            node_state.node.endpoint, clock.clock, node_state.term
+        );
+
+        return (true, node_state, clock);
     }
 
     let vote_request = RequestVote {
@@ -93,9 +128,12 @@ async fn request_vote<'a>(
     };
 
     let mut accepted_node = 0;
+    let mut request_fail = 0;
 
     // send request vote
     for node in &node_state.nodes {
+        if node_state.node.endpoint == node.endpoint { continue; }
+
         let response = vote(vote_request.clone(), node.clone()).await;
 
         if let Ok(response) = response {
@@ -104,10 +142,11 @@ async fn request_vote<'a>(
 
                 if accepted_node > node_state.nodes.len() / 2 {
                     node_state.raft_node_type = IrisRaftNodeType::Leader;
+                    clock.last_heartbeat_time = clock.clock;
 
                     info!(
-                        "node id:{} become Leader, inner clock time: {}, term: {}",
-                        node_state.node.id, clock.clock, node_state.term
+                        "node endpoint:{} become Leader, inner clock time: {}, term: {}",
+                        node_state.node.endpoint, clock.clock, node_state.term
                     );
 
                     let append_entries = AppendEntries {
@@ -120,22 +159,46 @@ async fn request_vote<'a>(
                     };
 
                     for node in &node_state.nodes {
-                        send_heartbeat(append_entries.clone(), node.clone()).await;
+                        let ignore = send_heartbeat(append_entries.clone(), node.clone()).await;
+
+                        if ignore.is_err() {
+                            continue;
+                        }
                     }
 
-                    break;
+                    break
+                }
+            } else {
+                if response.term > node_state.term {
+                    info!(
+                        "node endpoint:{} to Follower (leader term is {}), clock time: {}",
+                        node_state.node.endpoint, response.term, clock.clock
+                    );
+
+                    node_state.raft_node_type = IrisRaftNodeType::Follower;
+                    node_state.leader_endpoint = Some(response.term.to_string());
+                    clock.clock = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis();
+
+                    return (true, node_state, clock);
                 }
             }
+        } else {
+            request_fail = request_fail + 1;
         }
     }
+
+    (request_fail != node_state.nodes.len() - 1, node_state, clock)
 }
 
 async fn vote(
     vote_request: RequestVote,
     target: IrisRaftNode,
 ) -> Result<RequestVoteResponse, reqwest::Error> {
-    let client = reqwest::Client::new();
-    client
+    let client = ClientBuilder::new().timeout(Duration::from_secs(1));
+    client.build()?
         .post(format!("{}/vote", target.endpoint))
         .header("Content-Type", "application/json")
         .body(serde_json::to_string(&vote_request).unwrap())
@@ -148,16 +211,16 @@ async fn vote(
 async fn send_heartbeat(
     append_entries: AppendEntries,
     target: IrisRaftNode,
-) -> AppendEntriesResponse {
-    let client = reqwest::Client::new();
-    client
+) -> Result<AppendEntriesResponse, reqwest::Error> {
+    let client = ClientBuilder::new().timeout(Duration::from_secs(1)).build()?;
+    let res = client
         .post(format!("{}/append-entries", target.endpoint))
         .header("Content-Type", "application/json")
         .body(serde_json::to_string(&append_entries).unwrap())
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<AppendEntriesResponse>()
-        .await
-        .unwrap()
+        .await;
+
+    res
 }
