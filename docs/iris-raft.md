@@ -54,6 +54,10 @@ Raft 共识算法主要机制：
 
 Iris 实现（下称实现）使用 Rust 语言编写，并使用 Rust 高性能异步 Web 框架 Actix 作为数据传输通道。
 
+除了特殊说明的代码，本部分其余源码位于：[sample/iris_raft](sample/iris_raft)
+
+源码中包含三节点本地集群样例，详细查看源码目录 README.md 文件。
+
 ### 关键数据结构
 
 #### IrisRaftConfig
