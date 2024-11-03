@@ -19,7 +19,6 @@ path = "src/main_1.rs"
 iris = { path = "../iris" }
 log = "0.4"
 env_logger = "0.11"
-uuid = { version = "1.11.0", features = ["v4", "serde"] }
 figment = { version = "0.10", features = ["toml"] }
 
 actix-web = "4"

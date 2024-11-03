@@ -1,5 +1,6 @@
 use crate::message::Message;
-use crate::raft::append::AppendRequest;
+use crate::raft::append::{AppendRequest, AppendResponse};
+use crate::raft::client::PopData;
 use crate::raft::log::LogEntry;
 use crate::raft::node::NodeState;
 use actix_web::{get, post, web, Error, HttpResponse};
@@ -62,34 +63,35 @@ async fn post_data(
     if endpoint.is_none() {
         return Ok(HttpResponse::Ok().json(Message::fail()));
     }
-    let endpoint = endpoint.unwrap().endpoint.clone();
-    let leader = node_state.node.clone();
-    let term = node_state.term;
-    let index = node_state.index;
+
     let secret = node_state.secret.clone();
-    let req = async move {
-        let client = Client::builder()
-            .timeout(Duration::from_secs(5))
-            .build()
-            .unwrap();
+    let client = Client::builder()
+        .timeout(Duration::from_secs(5))
+        .build()
+        .unwrap();
 
-        let mut req = client
-            .post(format!("{}/raft/append", endpoint))
-            .json(&AppendRequest {
-                leader,
-                term,
-                index,
-                entries: body.clone(),
-            });
+    let mut req = client
+        .post(format!("{}/raft/append", endpoint.unwrap().endpoint))
+        .json(&AppendRequest {
+            leader: node_state.node.clone(),
+            term: node_state.term,
+            index: node_state.index,
+            entries: body.clone(),
+        });
 
-        if secret.is_some() {
-            req = req.bearer_auth(secret.clone().unwrap());
-        }
+    if secret.is_some() {
+        req = req.bearer_auth(secret.clone().unwrap());
+    }
 
-        req.send().await.unwrap();
-    };
+    let res = req.send().await.unwrap();
+    let res = res.json::<AppendResponse>().await.unwrap();
 
-    tokio::spawn(req);
+    if res.success && res.data.is_some() {
+        return Ok(HttpResponse::Ok().json(PopData {
+            data: res.data,
+            success: res.success,
+        }));
+    }
 
     Ok(HttpResponse::Ok().json(Message::success()))
 }

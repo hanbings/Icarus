@@ -6,6 +6,7 @@ use actix_web::{post, web, Error, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::info;
 use serde_json::json;
+use std::collections::VecDeque;
 use tokio::sync::Mutex;
 
 #[post("/raft/append")]
@@ -24,6 +25,7 @@ async fn append(
 
     node_clock.update_heartbeat();
 
+    let mut pop_data: std::option::Option<String> = None;
     match node_state.node_type {
         NodeType::Follower => {
             if node_state.leader.is_none() {
@@ -35,13 +37,26 @@ async fn append(
                     node_state.log.push(value.clone());
 
                     match value {
-                        LogEntry::LogSaveEntry(_, _, key, value) => {
+                        LogEntry::LogPushEntry(_, _, key, value) => {
                             if !node_state.data.contains_key(key) {
-                                node_state.data.insert(key.clone(), value.clone());
+                                let deque = node_state.data.get_mut(key).unwrap();
+                                deque.push_back(value.clone());
+                            } else {
+                                let mut deque = VecDeque::new();
+                                deque.push_back(value.clone());
+                                node_state.data.insert(key.clone(), deque);
+                            }
+                        }
+                        LogEntry::LogPopEntry(_, _, key) => {
+                            let deque = node_state.data.get_mut(key).unwrap();
+                            if !deque.is_empty() {
+                                let _ = deque.pop_front();
                             }
                         }
                         LogEntry::LogUpdateEntry(_, _, key, value) => {
-                            node_state.data.insert(key.clone(), value.clone());
+                            let mut deque = VecDeque::new();
+                            deque.push_back(value.clone());
+                            node_state.data.insert(key.clone(), deque);
                         }
                         LogEntry::LogDeleteEntry(_, _, key) => {
                             node_state.data.remove(key);
@@ -69,13 +84,30 @@ async fn append(
                     node_state.log.push(value.clone());
 
                     match value {
-                        LogEntry::LogSaveEntry(_, _, key, value) => {
+                        LogEntry::LogPushEntry(_, _, key, value) => {
                             if !node_state.data.contains_key(key) {
-                                node_state.data.insert(key.clone(), value.clone());
+                                let deque = node_state.data.get_mut(key).unwrap();
+                                deque.push_back(value.clone());
+                            } else {
+                                let mut deque = VecDeque::new();
+                                deque.push_back(value.clone());
+                                node_state.data.insert(key.clone(), deque);
+                            }
+                        }
+                        LogEntry::LogPopEntry(_, _, key) => {
+                            let deque = node_state.data.get_mut(key).unwrap();
+                            if !deque.is_empty() {
+                                let data = deque.pop_front();
+
+                                if data.is_some() {
+                                    pop_data = Some(data.unwrap());
+                                }
                             }
                         }
                         LogEntry::LogUpdateEntry(_, _, key, value) => {
-                            node_state.data.insert(key.clone(), value.clone());
+                            let mut deque = VecDeque::new();
+                            deque.push_back(value.clone());
+                            node_state.data.insert(key.clone(), deque);
                         }
                         LogEntry::LogDeleteEntry(_, _, key) => {
                             node_state.data.remove(key);
@@ -99,6 +131,7 @@ async fn append(
     }
 
     let res = json!(AppendResponse {
+        data: pop_data,
         index: node_state.index,
         success: true,
     });
@@ -112,7 +145,7 @@ pub async fn append_request(
     index: u64,
     target: Vec<Node>,
     entries: Vec<LogEntry>,
-    secret: Option<String>,
+    secret: std::option::Option<String>,
 ) {
     let client = reqwest::Client::new();
 

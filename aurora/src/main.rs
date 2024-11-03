@@ -68,7 +68,7 @@ async fn main() -> std::io::Result<()> {
             .as_millis(),
         election: 0,
     }));
-    let client = Data::new(Mutex::new(client::Client::new()));
+    let client = Data::new(Mutex::new(client::Client {}));
 
     info!("Application Running...");
     HttpServer::new(move || {

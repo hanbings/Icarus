@@ -13,7 +13,7 @@ pub async fn get_node(data: Data<Mutex<ClusterState>>) -> Result<impl Responder>
 
 pub async fn get_nodes(data: Data<Mutex<ClusterState>>) -> Result<impl Responder> {
     let nodes = &mut data.lock().unwrap().nodes;
-    let node = GossipNode::default();
+    let node = GossipNode::default_node();
     nodes.insert(node.id, node);
 
     Ok(web::Json(nodes.clone()))

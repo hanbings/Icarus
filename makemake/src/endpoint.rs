@@ -1,50 +1,42 @@
+use crate::message::Message;
+use crate::raft::client::Client;
+use crate::raft::node::NodeState;
 use actix_web::{delete, get, post, web, Error, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use iris_irides::message::Message;
-use iris_irides::raft::client::Client;
-use iris_irides::raft::node::NodeState;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tokio::sync::Mutex;
 
-#[get("/config")]
-async fn get_config(
+#[derive(Serialize, Deserialize)]
+struct DataRequest {
+    channel: String,
+    value: String,
+}
+
+#[get("/message")]
+pub async fn get_queue(
     node_state: web::Data<Mutex<NodeState>>,
-    _client: web::Data<Mutex<Client>>,
     auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
-    }
-
-    let leader = node_state.leader.clone();
-    if leader.is_none() {
-        return Ok(HttpResponse::Ok().json(Message::fail()));
     }
 
     Ok(HttpResponse::Ok().json(node_state.data.clone()))
 }
 
-#[derive(Deserialize, Serialize)]
-struct CreateConfigRequest {
-    key: String,
-    value: String,
-}
-
-#[post("/config")]
-async fn post_config(
+#[post("/message/{channel}/push")]
+pub async fn push_queue(
     node_state: web::Data<Mutex<NodeState>>,
     client: web::Data<Mutex<Client>>,
-    body: web::Json<CreateConfigRequest>,
+    body: web::Json<DataRequest>,
+    channel: web::Path<String>,
     auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -55,29 +47,28 @@ async fn post_config(
 
     let client = client.lock().await;
     client
-        .save(
+        .push(
             leader.unwrap().endpoint.clone(),
-            body.key.clone(),
+            channel.into_inner(),
             body.value.clone(),
             node_state.secret.clone(),
         )
         .await
         .unwrap();
 
-    Ok(HttpResponse::Ok().json(body))
+    Ok(HttpResponse::Ok().json(Message::success()))
 }
 
-#[get("/config/{key}")]
-async fn get_config_key(
+#[get("/message/{channel}/pop")]
+pub async fn pop_queue(
     node_state: web::Data<Mutex<NodeState>>,
-    _client: web::Data<Mutex<Client>>,
-    key: web::Path<String>,
+    client: web::Data<Mutex<Client>>,
+    channel: web::Path<String>,
     auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -86,30 +77,32 @@ async fn get_config_key(
         return Ok(HttpResponse::Ok().json(Message::fail()));
     }
 
-    let key = key.into_inner();
-    let value = node_state.data.get(&key);
-    if value.is_none() {
-        return Ok(HttpResponse::Ok().json(Message::fail()));
-    }
+    let client = client.lock().await;
+    let res = client
+        .pop(
+            leader.unwrap().endpoint.clone(),
+            channel.into_inner(),
+            node_state.secret.clone(),
+        )
+        .await;
 
-    Ok(HttpResponse::Ok().json(json!({
-        "key": key,
-        "value": value.unwrap()
-    })))
+    match res {
+        Ok(pop_data) => Ok(HttpResponse::Ok().json(pop_data)),
+        Err(_) => Ok(HttpResponse::Ok().json(Message::fail())),
+    }
 }
 
-#[post("/config/{key}")]
-async fn post_config_key(
+#[post("/message/{channel}")]
+pub async fn update_queue(
     node_state: web::Data<Mutex<NodeState>>,
     client: web::Data<Mutex<Client>>,
-    key: web::Path<String>,
-    body: web::Json<CreateConfigRequest>,
+    channel: web::Path<String>,
+    body: web::Json<DataRequest>,
     auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -122,7 +115,7 @@ async fn post_config_key(
     client
         .update(
             leader.unwrap().endpoint.clone(),
-            key.into_inner(),
+            channel.into_inner(),
             body.value.clone(),
             node_state.secret.clone(),
         )
@@ -132,17 +125,16 @@ async fn post_config_key(
     Ok(HttpResponse::Ok().json(Message::success()))
 }
 
-#[delete("/config/{key}")]
-async fn delete_config_key(
+#[delete("/message/{channel}")]
+pub async fn delete_queue(
     node_state: web::Data<Mutex<NodeState>>,
     client: web::Data<Mutex<Client>>,
-    key: web::Path<String>,
+    channel: web::Path<String>,
     auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -155,7 +147,7 @@ async fn delete_config_key(
     client
         .delete(
             leader.unwrap().endpoint.clone(),
-            key.into_inner(),
+            channel.into_inner(),
             node_state.secret.clone(),
         )
         .await

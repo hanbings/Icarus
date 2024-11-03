@@ -1,12 +1,19 @@
-use crate::raft::log::LogEntry::{LogDeleteEntry, LogSaveEntry};
+use crate::raft::log::LogEntry::{LogDeleteEntry, LogPopEntry, LogPushEntry};
 use actix_web::rt::time;
+use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::select;
 
 pub struct Client {}
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PopData {
+    pub data: Option<String>,
+    pub success: bool,
+}
+
 impl Client {
-    pub async fn save(
+    pub async fn push(
         &self,
         endpoint: String,
         key: String,
@@ -14,7 +21,7 @@ impl Client {
         secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
-        let entry = LogSaveEntry(0, 0, key, value);
+        let entry = LogPushEntry(0, 0, key, value);
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
@@ -22,6 +29,32 @@ impl Client {
             req = req.bearer_auth(secret.unwrap())
         }
         req.send().await
+    }
+
+    pub async fn pop(
+        &self,
+        endpoint: String,
+        key: String,
+        secret: Option<String>,
+    ) -> reqwest::Result<PopData> {
+        let client = reqwest::Client::new();
+        let entry = LogPopEntry(0, 0, key);
+
+        let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
+
+        if secret.is_some() {
+            req = req.bearer_auth(secret.unwrap())
+        }
+
+        let res = req.send().await;
+        let res = match res {
+            Ok(res) => res,
+            Err(err) => {
+                return Err(err);
+            }
+        };
+
+        res.json::<PopData>().await
     }
 
     pub async fn update(
@@ -32,7 +65,7 @@ impl Client {
         secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
-        let entry = LogSaveEntry(0, 0, key, value);
+        let entry = LogPushEntry(0, 0, key, value);
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 

@@ -13,7 +13,7 @@ pub struct GossipNode {
 }
 
 impl GossipNode {
-    pub fn default() -> Self {
+    pub fn default_node() -> Self {
         let local_ip = {
             let socket = std::net::UdpSocket::bind("0.0.0.0:0").unwrap();
             socket.connect("8.8.8.8:80").unwrap();
