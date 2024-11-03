@@ -6,4 +6,5 @@ pub struct Config {
     pub port: u16,
     pub endpoint: String,
     pub nodes: Vec<String>,
+    pub secret: Option<String>,
 }

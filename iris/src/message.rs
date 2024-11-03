@@ -20,4 +20,11 @@ impl Message {
             code: 500,
         }
     }
+
+    pub fn unauthorized() -> Self {
+        Message {
+            message: "unauthorized".to_string(),
+            code: 401,
+        }
+    }
 }

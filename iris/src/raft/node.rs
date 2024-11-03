@@ -31,6 +31,7 @@ pub struct NodeState {
     pub index: u64,
     pub log: Vec<LogEntry>,
     pub data: HashMap<String, String>,
+    pub secret: Option<String>,
 }
 
 impl NodeState {

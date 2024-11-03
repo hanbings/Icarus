@@ -1,7 +1,9 @@
+use crate::message::Message;
 use crate::raft::append::{AppendRequest, AppendResponse};
 use crate::raft::log::LogEntry;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use actix_web::{post, web, Error, HttpResponse};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::info;
 use serde_json::json;
 use tokio::sync::Mutex;
@@ -11,9 +13,15 @@ async fn append(
     node_state: web::Data<Mutex<NodeState>>,
     node_clock: web::Data<Mutex<NodeClockState>>,
     body: web::Json<AppendRequest>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let mut node_state = node_state.lock().await;
     let mut node_clock = node_clock.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
 
     node_clock.update_heartbeat();
 
@@ -54,7 +62,7 @@ async fn append(
             if body.entries.len() > 0 {
                 let leader = node_state.leader.clone();
                 if leader.is_none() {
-                    return Ok(HttpResponse::Ok().json({}));
+                    return Ok(HttpResponse::Ok().json(Message::fail()));
                 }
                 let leader = leader.unwrap();
 
@@ -85,6 +93,7 @@ async fn append(
                     body.index,
                     nodes,
                     body.entries.clone(),
+                    node_state.secret.clone(),
                 ));
             }
         }
@@ -104,6 +113,7 @@ pub async fn append_request(
     index: u64,
     target: Vec<Node>,
     entries: Vec<LogEntry>,
+    secret: Option<String>,
 ) {
     let client = reqwest::Client::new();
 
@@ -112,16 +122,20 @@ pub async fn append_request(
             continue;
         }
 
-        let res = client
+        let mut req = client
             .post(format!("{}/raft/append", node.endpoint))
             .json(&AppendRequest {
                 leader: leader.clone(),
                 term,
                 index,
                 entries: entries.clone(),
-            })
-            .send()
-            .await;
+            });
+
+        if secret.is_some() {
+            req = req.bearer_auth(secret.clone().unwrap());
+        }
+
+        let res = req.send().await;
 
         if let Err(err) = res {
             info!("Append request failed {}", err);

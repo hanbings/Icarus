@@ -1,4 +1,6 @@
 use actix_web::{delete, get, post, web, Error, HttpResponse};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
+use iris_irides::message::Message;
 use iris_irides::raft::client::Client;
 use iris_irides::raft::node::NodeState;
 use serde::{Deserialize, Serialize};
@@ -9,8 +11,15 @@ use tokio::sync::Mutex;
 async fn get_config(
     node_state: web::Data<Mutex<NodeState>>,
     _client: web::Data<Mutex<Client>>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
     let leader = node_state.leader.clone();
     if leader.is_none() {
         return Ok(HttpResponse::Ok().json({}));
@@ -30,8 +39,15 @@ async fn post_config(
     node_state: web::Data<Mutex<NodeState>>,
     client: web::Data<Mutex<Client>>,
     body: web::Json<CreateConfigRequest>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
     let leader = node_state.leader.clone();
     if leader.is_none() {
         return Ok(HttpResponse::Ok().json({}));
@@ -43,6 +59,7 @@ async fn post_config(
             leader.unwrap().endpoint.clone(),
             body.key.clone(),
             body.value.clone(),
+            node_state.secret.clone(),
         )
         .await
         .unwrap();
@@ -55,8 +72,15 @@ async fn get_config_key(
     node_state: web::Data<Mutex<NodeState>>,
     _client: web::Data<Mutex<Client>>,
     key: web::Path<String>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
     let leader = node_state.leader.clone();
     if leader.is_none() {
         return Ok(HttpResponse::Ok().json({}));
@@ -76,8 +100,15 @@ async fn post_config_key(
     client: web::Data<Mutex<Client>>,
     key: web::Path<String>,
     body: web::Json<CreateConfigRequest>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
     let leader = node_state.leader.clone();
     if leader.is_none() {
         return Ok(HttpResponse::Ok().json({}));
@@ -89,6 +120,7 @@ async fn post_config_key(
             leader.unwrap().endpoint.clone(),
             key.into_inner(),
             body.value.clone(),
+            node_state.secret.clone(),
         )
         .await
         .unwrap();
@@ -101,8 +133,15 @@ async fn delete_config_key(
     node_state: web::Data<Mutex<NodeState>>,
     client: web::Data<Mutex<Client>>,
     key: web::Path<String>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
     let leader = node_state.leader.clone();
     if leader.is_none() {
         return Ok(HttpResponse::Ok().json({}));
@@ -110,7 +149,11 @@ async fn delete_config_key(
 
     let client = client.lock().await;
     client
-        .delete(leader.unwrap().endpoint.clone(), key.into_inner())
+        .delete(
+            leader.unwrap().endpoint.clone(),
+            key.into_inner(),
+            node_state.secret.clone(),
+        )
         .await
         .unwrap();
 

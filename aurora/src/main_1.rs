@@ -1,5 +1,6 @@
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
+use actix_web_httpauth::middleware::HttpAuthentication;
 use figment::providers::{Format, Toml};
 use figment::Figment;
 use iris_irides::raft::client;
@@ -8,6 +9,7 @@ use iris_irides::raft::endpoint_check::check;
 use iris_irides::raft::endpoint_metadata::{get_data, get_state, post_data};
 use iris_irides::raft::endpoint_vote::vote;
 use iris_irides::raft::node::{Node, NodeClockState, NodeState, NodeType};
+use iris_irides::security::secret::secret_middleware;
 use log::info;
 use std::collections::HashMap;
 use std::env::set_var;
@@ -28,7 +30,10 @@ async fn main() -> std::io::Result<()> {
         .unwrap();
 
     info!("Initializing client...");
-    tokio::spawn(client::async_clock(config.endpoint.clone()));
+    tokio::spawn(client::async_clock(
+        config.endpoint.clone(),
+        config.secret.clone(),
+    ));
 
     let node = Node {
         endpoint: config.endpoint.clone(),
@@ -50,6 +55,7 @@ async fn main() -> std::io::Result<()> {
         index: 0,
         log: vec![],
         data: HashMap::new(),
+        secret: config.secret.clone(),
     }));
     let node_clock = Data::new(Mutex::new(NodeClockState {
         clock: SystemTime::now()
@@ -66,10 +72,13 @@ async fn main() -> std::io::Result<()> {
 
     info!("Application Running...");
     HttpServer::new(move || {
+        let auth = HttpAuthentication::with_fn(secret_middleware);
+
         App::new()
             .app_data(node_state.clone())
             .app_data(node_clock.clone())
             .app_data(client.clone())
+            .wrap(auth)
             .service(append)
             .service(vote)
             .service(check)

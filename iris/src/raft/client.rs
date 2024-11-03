@@ -15,15 +15,17 @@ impl Client {
         endpoint: String,
         key: String,
         value: String,
+        secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
         let entry = LogSaveEntry(0, 0, key, value);
 
-        client
-            .post(format!("{}/raft/data", endpoint))
-            .json(&entry)
-            .send()
-            .await
+        let mut res = client.post(format!("{}/raft/data", endpoint)).json(&entry);
+
+        if secret.is_some() {
+            res = res.bearer_auth(secret.unwrap())
+        }
+        res.send().await
     }
 
     pub async fn update(
@@ -31,48 +33,52 @@ impl Client {
         endpoint: String,
         key: String,
         value: String,
+        secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
         let entry = LogSaveEntry(0, 0, key, value);
 
-        client
-            .post(format!("{}/raft/data", endpoint))
-            .json(&entry)
-            .send()
-            .await
+        let mut res = client.post(format!("{}/raft/data", endpoint)).json(&entry);
+
+        if secret.is_some() {
+            res = res.bearer_auth(secret.unwrap())
+        }
+        res.send().await
     }
 
     pub async fn delete(
         &self,
         endpoint: String,
         key: String,
+        secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
         let entry = LogDeleteEntry(0, 0, key);
 
-        client
-            .post(format!("{}/raft/data", endpoint))
-            .json(&entry)
-            .send()
-            .await
+        let mut res = client.post(format!("{}/raft/data", endpoint)).json(&entry);
+
+        if secret.is_some() {
+            res = res.bearer_auth(secret.unwrap())
+        }
+        res.send().await
     }
 }
 
-pub async fn async_clock(endpoint: String) {
+pub async fn async_clock(endpoint: String, secret: Option<String>) {
     loop {
-        tokio::spawn(async_clock_task(endpoint.clone()));
+        tokio::spawn(async_clock_task(endpoint.clone(), secret.clone()));
         time::sleep(Duration::from_millis(100)).await;
     }
 }
 
-async fn async_clock_task(endpoint: String) {
+async fn async_clock_task(endpoint: String, secret: Option<String>) {
     let req = async {
-        let client = reqwest::Client::new()
-            .get(format!("{}/raft/check", endpoint))
-            .send()
-            .await;
+        let mut client = reqwest::Client::new().get(format!("{}/raft/check", endpoint));
 
-        client
+        if secret.is_some() {
+            client = client.bearer_auth(secret.unwrap())
+        }
+        client.send().await
     };
 
     let _result = select! {

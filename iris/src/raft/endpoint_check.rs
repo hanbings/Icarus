@@ -1,7 +1,9 @@
+use crate::message::Message;
 use crate::raft::append::AppendRequest;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use crate::raft::vote::{VoteRequest, VoteResponse};
 use actix_web::{get, web, Error, HttpResponse};
+use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::info;
 use reqwest::Client;
 use std::time::Duration;
@@ -11,9 +13,15 @@ use tokio::sync::{Mutex, MutexGuard};
 async fn check(
     node_state: web::Data<Mutex<NodeState>>,
     node_clock: web::Data<Mutex<NodeClockState>>,
+    auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let mut node_state = node_state.lock().await;
     let mut node_clock = node_clock.lock().await;
+
+    if node_state.secret.is_some() && auth.token().to_string() != node_state.secret.clone().unwrap()
+    {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
 
     // update clock
     node_clock.update_clock();
@@ -48,6 +56,7 @@ async fn check(
                     node_state.term,
                     node_state.index,
                     node.endpoint.clone(),
+                    node_state.secret.clone(),
                 ));
             }
         }
@@ -77,15 +86,18 @@ pub async fn vote_request<'a>(
             continue;
         }
 
-        let res = client
+        let mut req = client
             .post(format!("{}/raft/vote", node.endpoint))
             .json(&VoteRequest {
                 candidate: candidate.clone(),
                 term,
                 index,
-            })
-            .send()
-            .await;
+            });
+
+        if node_state.secret.is_some() {
+            req = req.bearer_auth(node_state.secret.clone().unwrap());
+        }
+        let res = req.send().await;
 
         info!("{}", res.is_ok());
 
@@ -145,19 +157,22 @@ pub async fn heartbeat_append_entries(
     term: u64,
     index: u64,
     target: String,
+    secret: Option<String>,
 ) -> Result<VoteResponse, reqwest::Error> {
     let client = Client::builder().timeout(Duration::from_secs(3)).build()?;
 
-    client
+    let mut req = client
         .post(format!("{}/raft/append", target))
         .json(&AppendRequest {
             leader,
             term,
             index,
             entries: vec![],
-        })
-        .send()
-        .await?
-        .json::<VoteResponse>()
-        .await
+        });
+
+    if secret.is_some() {
+        req = req.bearer_auth(secret.clone().unwrap());
+    }
+
+    req.send().await?.json::<VoteResponse>().await
 }
