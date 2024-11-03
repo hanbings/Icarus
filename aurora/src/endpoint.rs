@@ -15,8 +15,7 @@ async fn get_config(
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -43,8 +42,7 @@ async fn post_config(
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -76,8 +74,7 @@ async fn get_config_key(
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -108,8 +105,7 @@ async fn post_config_key(
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
@@ -141,8 +137,7 @@ async fn delete_config_key(
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap()
-    {
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
         return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
     }
 
