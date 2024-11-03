@@ -1,4 +1,4 @@
-name: Iris Build
+name: Makemake Build
 
 on:
   push:
@@ -8,16 +8,16 @@ on:
 
 jobs:
   check:
-    name: cargo check (iris)
+    name: cargo check (makemake)
     runs-on: ubuntu-latest
     if: "! contains(github.event.head_commit.message, '#Skip')"
     defaults:
       run:
-        working-directory: 'iris'
+        working-directory: 'makemake'
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install `rust` toolchain
         run: |
           ## Install `rust` toolchain
@@ -29,24 +29,24 @@ jobs:
           cargo check --all --all-features
 
   fmt:
-    name: cargo fmt --all -- --check (iris)
+    name: cargo fmt --all -- --check (makemake)
     runs-on: ubuntu-latest
     if: "! contains(github.event.head_commit.message, '#Skip')"
     defaults:
       run:
-        working-directory: 'iris'
+        working-directory: 'makemake'
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install `rust` toolchain
         run: |
           ## Install `rust` toolchain
           rustup toolchain install stable --no-self-update -c rustfmt --profile minimal
           rustup default stable
-      
+
       - run: rustup component add rustfmt
-      
+
       - name: cargo fmt
         run: |
           cargo fmt --all -- --check
