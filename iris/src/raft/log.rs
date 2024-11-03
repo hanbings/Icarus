@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub enum LogEntry {
     // index term key value
     LogSaveEntry(usize, usize, String, String),
