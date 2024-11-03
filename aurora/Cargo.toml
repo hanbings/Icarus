@@ -3,6 +3,18 @@ name = "aurora"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "main"
+path = "src/main.rs"
+
+[[bin]]
+name = "main_0"
+path = "src/main_0.rs"
+
+[[bin]]
+name = "main_1"
+path = "src/main_1.rs"
+
 [dependencies]
 iris = { path = "../iris" }
 log = "0.4"

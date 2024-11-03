@@ -26,18 +26,22 @@ async fn append(
                 node_state.set_follower(body.clone().leader, body.term, body.index);
             }
 
-            if node_state.index == (body.index - body.entries.len() as u64) {
-                let response = json!(AppendResponse {
-                    index: node_state.index,
-                    success: false,
-                });
-
-                return Ok(HttpResponse::Ok().json(response));
-            }
-
             if body.entries.len() > 0 {
                 for value in &body.entries {
-                    node_state.data.push(value.clone());
+                    node_state.log.push(value.clone());
+
+                    match value {
+                        LogEntry::LogSaveEntry(_, _, key, value) => {
+                            node_state.data.insert(key.clone(), value.clone());
+                        }
+                        LogEntry::LogUpdateEntry(_, _, key, value) => {
+                            node_state.data.insert(key.clone(), value.clone());
+                        }
+                        LogEntry::LogDeleteEntry(_, _, key) => {
+                            node_state.data.remove(key);
+                        }
+                    }
+
                     node_state.index = node_state.index + 1;
                 }
             }
@@ -60,7 +64,21 @@ async fn append(
                 let leader = leader.unwrap();
 
                 for value in &body.entries {
-                    node_state.data.push(value.clone());
+                    node_state.log.push(value.clone());
+
+
+                    match value {
+                        LogEntry::LogSaveEntry(_, _, key, value) => {
+                            node_state.data.insert(key.clone(), value.clone());
+                        }
+                        LogEntry::LogUpdateEntry(_, _, key, value) => {
+                            node_state.data.insert(key.clone(), value.clone());
+                        }
+                        LogEntry::LogDeleteEntry(_, _, key) => {
+                            node_state.data.remove(key);
+                        }
+                    }
+
                     node_state.index = node_state.index + 1;
                 }
 

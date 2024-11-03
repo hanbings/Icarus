@@ -23,7 +23,7 @@ async fn main() -> std::io::Result<()> {
 
     info!("Extracting config...");
     let config: config::Config = Figment::new()
-        .merge(Toml::file("aurora.toml"))
+        .merge(Toml::file("aurora_1.toml"))
         .extract()
         .unwrap();
 

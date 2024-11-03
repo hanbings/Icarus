@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::raft::log::LogEntry;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
@@ -27,7 +28,8 @@ pub struct NodeState {
     // log_index of the append entries,
     // so the last_term_index field is not needed.
     pub index: u64,
-    pub data: Vec<LogEntry>,
+    pub log: Vec<LogEntry>,
+    pub data: HashMap<String, String>
 }
 
 impl NodeState {

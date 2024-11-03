@@ -17,6 +17,7 @@ async fn get_state(app: web::Data<Mutex<NodeState>>) -> Result<HttpResponse, Err
         leader: node_state.leader.clone(),
         term: node_state.term,
         index: node_state.index,
+        log: node_state.log.clone(),
         data: node_state.data.clone(),
     }))
 }
