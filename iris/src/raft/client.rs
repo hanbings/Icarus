@@ -1,32 +1,60 @@
+use crate::raft::log::LogEntry::{LogDeleteEntry, LogSaveEntry};
 use actix_web::rt::time;
 use std::time::Duration;
 use tokio::select;
 
-pub struct Client {
-    pub endpoint: String,
-}
+pub struct Client {}
 
 impl Client {
-    pub fn new(endpoint: String) -> Self {
-        Self {
-            endpoint,
-        }
+    pub fn new() -> Self {
+        Self {}
     }
 
-    pub async fn get(&self) -> Result<reqwest::Response, reqwest::Error> {
-        todo!()
+    pub async fn save(
+        &self,
+        endpoint: String,
+        key: String,
+        value: String,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let client = reqwest::Client::new();
+        let entry = LogSaveEntry(0, 0, key, value);
+
+        client
+            .post(format!("{}/raft/data", endpoint))
+            .json(&entry)
+            .send()
+            .await
     }
 
-    pub async fn save(&self, _data: String) -> Result<reqwest::Response, reqwest::Error> {
-        todo!()
+    pub async fn update(
+        &self,
+        endpoint: String,
+        key: String,
+        value: String,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let client = reqwest::Client::new();
+        let entry = LogSaveEntry(0, 0, key, value);
+
+        client
+            .post(format!("{}/raft/data", endpoint))
+            .json(&entry)
+            .send()
+            .await
     }
 
-    pub async fn update(&self, _data: String) -> Result<reqwest::Response, reqwest::Error> {
-        todo!()
-    }
+    pub async fn delete(
+        &self,
+        endpoint: String,
+        key: String,
+    ) -> Result<reqwest::Response, reqwest::Error> {
+        let client = reqwest::Client::new();
+        let entry = LogDeleteEntry(0, 0, key);
 
-    pub async fn delete(&self) -> Result<reqwest::Response, reqwest::Error> {
-        todo!()
+        client
+            .post(format!("{}/raft/data", endpoint))
+            .json(&entry)
+            .send()
+            .await
     }
 }
 
@@ -39,14 +67,17 @@ pub async fn async_clock(endpoint: String) {
 
 async fn async_clock_task(endpoint: String) {
     let req = async {
-        let client = reqwest::Client::new().get(&endpoint).send().await;
+        let client = reqwest::Client::new()
+            .get(format!("{}/raft/check", endpoint))
+            .send()
+            .await;
 
         client
     };
 
     let _result = select! {
         result = req => result,
-        _ = time::sleep(Duration::from_secs(5)) => {
+        _ = time::sleep(Duration::from_secs(10)) => {
             return;
         }
     };

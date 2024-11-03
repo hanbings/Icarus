@@ -2,17 +2,16 @@ use crate::raft::append::{AppendRequest, AppendResponse};
 use crate::raft::log::LogEntry;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use actix_web::{post, web, Error, HttpResponse};
-use log::{info, warn};
+use log::info;
 use serde_json::json;
 use tokio::sync::Mutex;
 
-#[post("/append")]
+#[post("/raft/append")]
 async fn append(
     node_state: web::Data<Mutex<NodeState>>,
     node_clock: web::Data<Mutex<NodeClockState>>,
     body: web::Json<AppendRequest>,
 ) -> Result<HttpResponse, Error> {
-    info!("Received append request");
     let mut node_state = node_state.lock().await;
     let mut node_clock = node_clock.lock().await;
 
@@ -20,8 +19,6 @@ async fn append(
 
     match node_state.node_type {
         NodeType::Follower => {
-            info!("Follower received append");
-
             if node_state.leader.is_none() {
                 node_state.set_follower(body.clone().leader, body.term, body.index);
             }
@@ -32,7 +29,9 @@ async fn append(
 
                     match value {
                         LogEntry::LogSaveEntry(_, _, key, value) => {
-                            node_state.data.insert(key.clone(), value.clone());
+                            if !node_state.data.contains_key(key) {
+                                node_state.data.insert(key.clone(), value.clone());
+                            }
                         }
                         LogEntry::LogUpdateEntry(_, _, key, value) => {
                             node_state.data.insert(key.clone(), value.clone());
@@ -47,15 +46,11 @@ async fn append(
             }
         }
         NodeType::Candidate => {
-            info!("Candidate received append");
-
             if body.term < node_state.term {
                 node_state.set_follower(body.clone().leader, body.term, body.index);
             }
         }
         NodeType::Leader => {
-            warn!("Leader received append");
-
             if body.entries.len() > 0 {
                 let leader = node_state.leader.clone();
                 if leader.is_none() {
@@ -66,10 +61,11 @@ async fn append(
                 for value in &body.entries {
                     node_state.log.push(value.clone());
 
-
                     match value {
                         LogEntry::LogSaveEntry(_, _, key, value) => {
-                            node_state.data.insert(key.clone(), value.clone());
+                            if !node_state.data.contains_key(key) {
+                                node_state.data.insert(key.clone(), value.clone());
+                            }
                         }
                         LogEntry::LogUpdateEntry(_, _, key, value) => {
                             node_state.data.insert(key.clone(), value.clone());
@@ -117,7 +113,7 @@ pub async fn append_request(
         }
 
         let res = client
-            .post(format!("{}/append", node.endpoint))
+            .post(format!("{}/raft/append", node.endpoint))
             .json(&AppendRequest {
                 leader: leader.clone(),
                 term,

@@ -1,6 +1,7 @@
-use std::collections::HashMap;
 use crate::raft::log::LogEntry;
+use log::info;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::time::SystemTime;
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
@@ -29,13 +30,19 @@ pub struct NodeState {
     // so the last_term_index field is not needed.
     pub index: u64,
     pub log: Vec<LogEntry>,
-    pub data: HashMap<String, String>
+    pub data: HashMap<String, String>,
 }
 
 impl NodeState {
     pub fn set_candidate(&mut self) {
         self.node_type = NodeType::Candidate;
         self.term += 1;
+        self.leader = None;
+
+        info!(
+            "Node {} became Candidate with Term: {}",
+            self.node.endpoint, self.term
+        );
     }
 
     pub fn set_follower(&mut self, leader: Node, term: u64, index: u64) {
@@ -43,11 +50,23 @@ impl NodeState {
         self.leader = Some(leader);
         self.term = term;
         self.index = index;
+
+        info!(
+            "Node {} became Follower with Term: {}, Leader: {}",
+            self.node.endpoint,
+            self.term,
+            self.leader.as_ref().unwrap().endpoint
+        );
     }
 
     pub fn set_leader(&mut self) {
         self.node_type = NodeType::Leader;
         self.leader = Some(self.node.clone());
+
+        info!(
+            "Node {} became Leader with Term: {}",
+            self.node.endpoint, self.term
+        );
     }
 }
 

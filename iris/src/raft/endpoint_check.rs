@@ -1,3 +1,4 @@
+use crate::raft::append::AppendRequest;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use crate::raft::vote::{VoteRequest, VoteResponse};
 use actix_web::{get, web, Error, HttpResponse};
@@ -5,9 +6,8 @@ use log::info;
 use reqwest::Client;
 use std::time::Duration;
 use tokio::sync::{Mutex, MutexGuard};
-use crate::raft::append::AppendRequest;
 
-#[get("/check")]
+#[get("/raft/check")]
 async fn check(
     node_state: web::Data<Mutex<NodeState>>,
     node_clock: web::Data<Mutex<NodeClockState>>,
@@ -59,9 +59,9 @@ async fn check(
 pub async fn vote_request<'a>(
     mut node_state: MutexGuard<'a, NodeState>,
     mut node_clock: MutexGuard<'a, NodeClockState>,
-) -> bool {
+) {
     let client = Client::builder()
-        .timeout(Duration::from_secs(3))
+        .timeout(Duration::from_secs(5))
         .build()
         .unwrap();
 
@@ -78,7 +78,7 @@ pub async fn vote_request<'a>(
         }
 
         let res = client
-            .post(format!("{}/vote", node.endpoint))
+            .post(format!("{}/raft/vote", node.endpoint))
             .json(&VoteRequest {
                 candidate: candidate.clone(),
                 term,
@@ -86,6 +86,8 @@ pub async fn vote_request<'a>(
             })
             .send()
             .await;
+
+        info!("{}", res.is_ok());
 
         let res = match res {
             Ok(res) => res,
@@ -110,6 +112,8 @@ pub async fn vote_request<'a>(
 
                         node_state.set_follower(leader, res.term, res.index);
                         node_clock.update_heartbeat();
+
+                        return;
                     }
                 }
             }
@@ -119,15 +123,21 @@ pub async fn vote_request<'a>(
         }
     }
 
-    info!("{} {} term {}", approved, failed, node_state.term);
-    if approved > ((target.len() - 1) / 2) || failed >= (target.len() - 1) {
+    info!(
+        "vote approved {} failed {}, term {}",
+        approved, failed, node_state.term
+    );
+
+    // Oops! We should have used i64 when reserving the term number for State in the first place.
+    // We have to guard against negative numbers here.
+    if approved > (std::cmp::max(target.len() as i64 - failed as i64 - 1, 0) / 2)
+        || failed >= (target.len() - 1)
+    {
         info!("Elected as leader {}", candidate.endpoint);
 
         node_state.set_leader();
         node_clock.update_heartbeat();
     }
-
-    failed > target.len() - 1
 }
 
 pub async fn heartbeat_append_entries(
@@ -139,7 +149,7 @@ pub async fn heartbeat_append_entries(
     let client = Client::builder().timeout(Duration::from_secs(3)).build()?;
 
     client
-        .post(format!("{}/append", target))
+        .post(format!("{}/raft/append", target))
         .json(&AppendRequest {
             leader,
             term,

@@ -6,7 +6,7 @@ use reqwest::Client;
 use std::time::Duration;
 use tokio::sync::Mutex;
 
-#[get("/")]
+#[get("/raft/status")]
 async fn get_state(app: web::Data<Mutex<NodeState>>) -> Result<HttpResponse, Error> {
     let node_state = app.lock().await;
 
@@ -22,15 +22,15 @@ async fn get_state(app: web::Data<Mutex<NodeState>>) -> Result<HttpResponse, Err
     }))
 }
 
-#[get("/data")]
+#[get("/raft/data")]
 async fn get_data(node_state: web::Data<Mutex<NodeState>>) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
 
     Ok(HttpResponse::Ok().json(node_state.data.clone()))
 }
 
-#[post("/data/push")]
-async fn push_data(
+#[post("/raft/data")]
+async fn post_data(
     node_state: web::Data<Mutex<NodeState>>,
     body: web::Json<Vec<LogEntry>>,
 ) -> Result<HttpResponse, Error> {
@@ -51,7 +51,7 @@ async fn push_data(
             .unwrap();
 
         client
-            .post(format!("{}/append", endpoint))
+            .post(format!("{}/raft/append", endpoint))
             .json(&AppendRequest {
                 leader,
                 term,

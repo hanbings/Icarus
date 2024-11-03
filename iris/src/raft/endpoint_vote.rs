@@ -5,13 +5,13 @@ use log::info;
 use serde_json::json;
 use tokio::sync::Mutex;
 
-#[post("/vote")]
+#[post("/raft/vote")]
 async fn vote(
     node_state: web::Data<Mutex<NodeState>>,
     node_clock: web::Data<Mutex<NodeClockState>>,
     body: web::Json<VoteRequest>,
 ) -> Result<HttpResponse, Error> {
-    info!("Received vote request");
+    info!("Received vote request, {:?}", body);
 
     let mut node_clock = node_clock.lock().await;
 
@@ -21,7 +21,9 @@ async fn vote(
     let mut mutex_state = node_state.lock().await;
     let leader = mutex_state.leader.clone();
 
-    if body.term > mutex_state.term {
+    if body.term > mutex_state.term
+        || (body.term == mutex_state.term && body.index > mutex_state.index)
+    {
         mutex_state.set_follower(body.clone().candidate, body.term, body.index);
 
         return Ok(HttpResponse::Ok().json(json!(VoteResponse {

@@ -1,20 +1,20 @@
+use crate::endpoint::{
+    delete_config_key, get_config, get_config_key, post_config, post_config_key,
+};
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use figment::providers::{Format, Toml};
 use figment::Figment;
+use iris_irides::raft::client;
 use iris_irides::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use log::info;
 use std::collections::HashMap;
 use std::env::set_var;
 use std::time::SystemTime;
 use tokio::sync::Mutex;
-use iris_irides::raft::client;
-use iris_irides::raft::endpoint_append::append;
-use iris_irides::raft::endpoint_check::check;
-use iris_irides::raft::endpoint_metadata::{get_data, get_state, push_data};
-use iris_irides::raft::endpoint_vote::vote;
 
 mod config;
+mod endpoint;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -28,12 +28,18 @@ async fn main() -> std::io::Result<()> {
         .unwrap();
 
     info!("Initializing client...");
-    tokio::spawn(client::async_clock(
-        format!("http://127.0.0.1:{}/check", config.port).to_string(),
-    ));
+    tokio::spawn(client::async_clock(config.endpoint.clone()));
 
-    let node = Node { endpoint: config.endpoint.clone() };
-    let nodes = config.nodes.iter().map(|node| Node { endpoint: node.clone() }).collect();
+    let node = Node {
+        endpoint: config.endpoint.clone(),
+    };
+    let nodes = config
+        .nodes
+        .iter()
+        .map(|node| Node {
+            endpoint: node.clone(),
+        })
+        .collect();
     info!("Setting up server...");
     let node_state = Data::new(Mutex::new(NodeState {
         node,
@@ -56,20 +62,27 @@ async fn main() -> std::io::Result<()> {
             .as_millis(),
         election: 0,
     }));
+    let client = Data::new(Mutex::new(client::Client::new()));
 
     info!("Application Running...");
-    HttpServer::new(move ||
+    HttpServer::new(move || {
         App::new()
             .app_data(node_state.clone())
             .app_data(node_clock.clone())
-            .service(append)
-            .service(vote)
-            .service(check)
-            .service(get_state)
-            .service(get_data)
-            .service(push_data)
-    )
-        .bind((config.ip, config.port))?
-        .run()
-        .await
+            .app_data(client.clone())
+            .service(iris_irides::raft::endpoint_append::append)
+            .service(iris_irides::raft::endpoint_vote::vote)
+            .service(iris_irides::raft::endpoint_check::check)
+            .service(iris_irides::raft::endpoint_metadata::get_state)
+            .service(iris_irides::raft::endpoint_metadata::get_data)
+            .service(iris_irides::raft::endpoint_metadata::post_data)
+            .service(get_config)
+            .service(get_config_key)
+            .service(post_config)
+            .service(post_config_key)
+            .service(delete_config_key)
+    })
+    .bind((config.ip, config.port))?
+    .run()
+    .await
 }
