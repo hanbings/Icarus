@@ -7,7 +7,7 @@ edition = "2021"
 iris = { path = "../iris" }
 log = "0.4"
 env_logger = "0.11"
-figment = { version = "0.10", features = ["toml"] }
+figment = { version = "0.10", features = ["toml", "json"] }
 
 actix-web = "4"
 actix-web-httpauth = "0.8.2"

@@ -21,9 +21,7 @@ pub async fn explore_service(
     let services: Vec<FloraService> = node_state
         .data
         .iter()
-        .map(|instance| serde_json::from_str::<FloraService>(instance.1))
-        .filter(|service| service.is_ok())
-        .map(|service| service.unwrap())
+        .flat_map(|instance| serde_json::from_str::<FloraService>(instance.1))
         .filter(|service| {
             service.service_name.as_str() == service_name.clone().into_inner().as_str()
         })

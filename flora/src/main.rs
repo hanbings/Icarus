@@ -4,13 +4,14 @@ use crate::endpoint::{
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
-use figment::providers::{Format, Toml};
+use figment::providers::{Format, Json, Toml};
 use figment::Figment;
 use iris_irides::raft::client;
 use iris_irides::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use iris_irides::security::secret::secret_middleware;
 use log::info;
 use std::collections::HashMap;
+use std::env;
 use std::env::set_var;
 use std::time::SystemTime;
 use tokio::sync::Mutex;
@@ -24,9 +25,13 @@ async fn main() -> std::io::Result<()> {
     set_var("RUST_LOG", "info");
     env_logger::init();
 
+    let env_config = env::var("FLORA_CONFIG");
+    let env_config = env_config.unwrap_or_else(|_| "{}".to_string());
+
     info!("Extracting config...");
     let config: config::Config = Figment::new()
-        .merge(Toml::file("aurora.toml"))
+        .merge(Toml::file("flora.toml"))
+        .merge(Json::string(env_config.as_str()))
         .extract()
         .unwrap();
 
