@@ -7,7 +7,7 @@ use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
 use figment::providers::{Format, Json, Toml};
 use figment::Figment;
-use log::info;
+use log::{error, info};
 use std::collections::HashMap;
 use std::env;
 use std::env::set_var;
@@ -33,7 +33,14 @@ async fn main() -> std::io::Result<()> {
         .merge(Toml::file("makemake.toml"))
         .merge(Json::string(env_config.as_str()))
         .extract()
-        .unwrap();
+        .unwrap_or_else(|_| {
+            error!(
+                "Unable to extract config from {}.\
+                Check aurora.toml or set AURORA_CONFIG environment variable.",
+                env_config
+            );
+            std::process::exit(1);
+        });
 
     info!("Initializing client...");
     tokio::spawn(client::async_clock(
