@@ -1060,6 +1060,7 @@ dependencies = [
  "figment",
  "futures",
  "log",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",

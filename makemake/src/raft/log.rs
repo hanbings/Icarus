@@ -5,8 +5,8 @@ use serde::{Deserialize, Serialize};
 pub enum LogEntry {
     // index term key value
     LogPushEntry(usize, usize, String, String),
-    // index term key
-    LogPopEntry(usize, usize, String),
+    // index term token key
+    LogPopEntry(usize, usize, String, String),
     // index term key value
     LogUpdateEntry(usize, usize, String, String),
     // index term key

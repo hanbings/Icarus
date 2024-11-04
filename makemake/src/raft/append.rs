@@ -12,7 +12,6 @@ pub struct AppendRequest {
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct AppendResponse {
-    pub data: Option<String>,
     pub index: u64,
     pub success: bool,
 }

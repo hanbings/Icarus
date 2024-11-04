@@ -1,4 +1,4 @@
-use crate::endpoint::{delete_queue, get_queue, pop_queue, push_queue, update_queue};
+use crate::endpoint::{delete_queue, get_pop_data, get_queue, pop_queue, push_queue, update_queue};
 use crate::raft::client;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use crate::security::secret::secret_middleware;
@@ -82,6 +82,7 @@ async fn main() -> std::io::Result<()> {
             .as_millis(),
         election: 0,
     }));
+    let pop_state = Data::new(Mutex::new(HashMap::<String, String>::new()));
     let client = Data::new(Mutex::new(client::Client {}));
 
     info!("Application Running...");
@@ -90,6 +91,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(node_state.clone())
             .app_data(node_clock.clone())
+            .app_data(pop_state.clone())
             .app_data(client.clone())
             .wrap(auth)
             .service(raft::endpoint_append::append)
@@ -98,9 +100,11 @@ async fn main() -> std::io::Result<()> {
             .service(raft::endpoint_metadata::get_state)
             .service(raft::endpoint_metadata::get_data)
             .service(raft::endpoint_metadata::post_data)
+            .service(raft::endpoint_metadata::pop_data)
             .service(get_queue)
             .service(push_queue)
             .service(pop_queue)
+            .service(get_pop_data)
             .service(update_queue)
             .service(delete_queue)
     })

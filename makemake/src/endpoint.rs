@@ -53,8 +53,7 @@ pub async fn push_queue(
             body.value.clone(),
             node_state.secret.clone(),
         )
-        .await
-        .unwrap();
+        .await;
 
     Ok(HttpResponse::Ok().json(Message::success()))
 }
@@ -76,19 +75,49 @@ pub async fn pop_queue(
     if leader.is_none() {
         return Ok(HttpResponse::Ok().json(Message::fail()));
     }
+    let leader = leader.unwrap();
+    let secret = node_state.secret.clone();
 
     let client = client.lock().await;
-    let res = client
+    let token = client
         .pop(
-            leader.unwrap().endpoint.clone(),
+            leader.endpoint.clone(),
             channel.into_inner(),
-            node_state.secret.clone(),
+            secret.clone(),
         )
         .await;
 
+    Ok(HttpResponse::Ok().json(token))
+}
+
+#[get("/message/{token}")]
+pub async fn get_pop_data(
+    node_state: web::Data<Mutex<NodeState>>,
+    client: web::Data<Mutex<Client>>,
+    token: web::Path<String>,
+    auth: BearerAuth,
+) -> Result<HttpResponse, Error> {
+    let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
+    let leader = node_state.leader.clone();
+    if leader.is_none() {
+        return Ok(HttpResponse::Ok().json(Message::fail()));
+    }
+    let leader = leader.unwrap();
+    let secret = node_state.secret.clone();
+
+    let client = client.lock().await;
+    let res = client
+        .get_pop_data(leader.endpoint.clone(), token.into_inner(), secret.clone())
+        .await;
+
     match res {
-        Ok(pop_data) => Ok(HttpResponse::Ok().json(pop_data)),
-        Err(_) => Ok(HttpResponse::Ok().json(Message::fail())),
+        None => Ok(HttpResponse::Ok().json(Message::fail())),
+        Some(res) => Ok(HttpResponse::Ok().json(res)),
     }
 }
 
@@ -119,8 +148,7 @@ pub async fn update_queue(
             body.value.clone(),
             node_state.secret.clone(),
         )
-        .await
-        .unwrap();
+        .await;
 
     Ok(HttpResponse::Ok().json(Message::success()))
 }
@@ -150,8 +178,7 @@ pub async fn delete_queue(
             channel.into_inner(),
             node_state.secret.clone(),
         )
-        .await
-        .unwrap();
+        .await;
 
     Ok(HttpResponse::Ok().json(Message::success()))
 }

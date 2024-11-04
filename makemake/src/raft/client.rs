@@ -1,44 +1,44 @@
 use crate::raft::log::LogEntry::{LogDeleteEntry, LogPopEntry, LogPushEntry};
 use actix_web::rt::time;
+use rand::random;
+use reqwest::ClientBuilder;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use tokio::select;
+use tokio::time::sleep;
 
 pub struct Client {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PopData {
-    pub data: Option<String>,
-    pub success: bool,
+    pub data: String,
 }
 
 impl Client {
-    pub async fn push(
-        &self,
-        endpoint: String,
-        key: String,
-        value: String,
-        secret: Option<String>,
-    ) -> Result<reqwest::Response, reqwest::Error> {
-        let client = reqwest::Client::new();
-        let entry = LogPushEntry(0, 0, key, value);
+    pub async fn push(&self, endpoint: String, key: String, value: String, secret: Option<String>) {
+        let client = ClientBuilder::new()
+            .timeout(Duration::from_secs(3))
+            .build()
+            .unwrap();
+
+        let entry = vec![LogPushEntry(0, 0, key, value)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
         if secret.is_some() {
             req = req.bearer_auth(secret.unwrap())
         }
-        req.send().await
+
+        tokio::spawn(req.send());
     }
 
-    pub async fn pop(
-        &self,
-        endpoint: String,
-        key: String,
-        secret: Option<String>,
-    ) -> reqwest::Result<PopData> {
-        let client = reqwest::Client::new();
-        let entry = LogPopEntry(0, 0, key);
+    pub async fn pop(&self, endpoint: String, key: String, secret: Option<String>) -> String {
+        let client = ClientBuilder::new()
+            .timeout(Duration::from_secs(3))
+            .build()
+            .unwrap();
+        let token = random::<u128>().to_string();
+        let entry = vec![LogPopEntry(0, 0, token.clone(), key)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
@@ -46,15 +46,41 @@ impl Client {
             req = req.bearer_auth(secret.unwrap())
         }
 
-        let res = req.send().await;
-        let res = match res {
-            Ok(res) => res,
-            Err(err) => {
-                return Err(err);
-            }
-        };
+        tokio::spawn(req.send());
 
-        res.json::<PopData>().await
+        token
+    }
+
+    pub async fn get_pop_data(
+        &self,
+        endpoint: String,
+        token: String,
+        secret: Option<String>,
+    ) -> Option<PopData> {
+        let client = ClientBuilder::new()
+            .timeout(Duration::from_secs(3))
+            .build()
+            .unwrap();
+
+        for _round in 0..5 {
+            sleep(Duration::from_millis(100)).await;
+
+            let mut req = client.get(format!("{}/raft/data/pop/{}", endpoint, token));
+
+            if secret.is_some() {
+                req = req.bearer_auth(secret.clone().unwrap())
+            }
+
+            let res = req.send().await;
+            if res.is_ok() {
+                let res = res.unwrap().json::<PopData>().await;
+                if let Ok(res) = res {
+                    return Some(res);
+                }
+            }
+        }
+
+        None
     }
 
     pub async fn update(
@@ -63,33 +89,30 @@ impl Client {
         key: String,
         value: String,
         secret: Option<String>,
-    ) -> Result<reqwest::Response, reqwest::Error> {
+    ) {
         let client = reqwest::Client::new();
-        let entry = LogPushEntry(0, 0, key, value);
+        let entry = vec![LogPushEntry(0, 0, key, value)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
         if secret.is_some() {
             req = req.bearer_auth(secret.unwrap())
         }
-        req.send().await
+
+        tokio::spawn(req.send());
     }
 
-    pub async fn delete(
-        &self,
-        endpoint: String,
-        key: String,
-        secret: Option<String>,
-    ) -> Result<reqwest::Response, reqwest::Error> {
+    pub async fn delete(&self, endpoint: String, key: String, secret: Option<String>) {
         let client = reqwest::Client::new();
-        let entry = LogDeleteEntry(0, 0, key);
+        let entry = vec![LogDeleteEntry(0, 0, key)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
         if secret.is_some() {
             req = req.bearer_auth(secret.unwrap())
         }
-        req.send().await
+
+        tokio::spawn(req.send());
     }
 }
 

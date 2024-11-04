@@ -5,13 +5,16 @@ use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use actix_web::{post, web, Error, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use log::info;
+use reqwest::ClientBuilder;
 use serde_json::json;
-use std::collections::VecDeque;
+use std::collections::{HashMap, VecDeque};
+use std::time::Duration;
 use tokio::sync::Mutex;
 
 #[post("/raft/append")]
 async fn append(
     node_state: web::Data<Mutex<NodeState>>,
+    pop_state: web::Data<Mutex<HashMap<String, String>>>,
     node_clock: web::Data<Mutex<NodeClockState>>,
     body: web::Json<AppendRequest>,
     auth: BearerAuth,
@@ -25,7 +28,6 @@ async fn append(
 
     node_clock.update_heartbeat();
 
-    let mut pop_data: std::option::Option<String> = None;
     match node_state.node_type {
         NodeType::Follower => {
             if node_state.leader.is_none() {
@@ -38,7 +40,7 @@ async fn append(
 
                     match value {
                         LogEntry::LogPushEntry(_, _, key, value) => {
-                            if !node_state.data.contains_key(key) {
+                            if node_state.data.contains_key(key) {
                                 let deque = node_state.data.get_mut(key).unwrap();
                                 deque.push_back(value.clone());
                             } else {
@@ -47,7 +49,7 @@ async fn append(
                                 node_state.data.insert(key.clone(), deque);
                             }
                         }
-                        LogEntry::LogPopEntry(_, _, key) => {
+                        LogEntry::LogPopEntry(_, _, _token, key) => {
                             let deque = node_state.data.get_mut(key).unwrap();
                             if !deque.is_empty() {
                                 let _ = deque.pop_front();
@@ -85,7 +87,7 @@ async fn append(
 
                     match value {
                         LogEntry::LogPushEntry(_, _, key, value) => {
-                            if !node_state.data.contains_key(key) {
+                            if node_state.data.contains_key(key) {
                                 let deque = node_state.data.get_mut(key).unwrap();
                                 deque.push_back(value.clone());
                             } else {
@@ -94,13 +96,16 @@ async fn append(
                                 node_state.data.insert(key.clone(), deque);
                             }
                         }
-                        LogEntry::LogPopEntry(_, _, key) => {
+                        LogEntry::LogPopEntry(_, _, token, key) => {
                             let deque = node_state.data.get_mut(key).unwrap();
                             if !deque.is_empty() {
                                 let data = deque.pop_front();
 
                                 if data.is_some() {
-                                    pop_data = Some(data.unwrap());
+                                    let pop_data = Some(data.unwrap());
+                                    let mut pop_state = pop_state.lock().await;
+                                    pop_state
+                                        .insert(token.to_string(), json!(pop_data).to_string());
                                 }
                             }
                         }
@@ -131,7 +136,6 @@ async fn append(
     }
 
     let res = json!(AppendResponse {
-        data: pop_data,
         index: node_state.index,
         success: true,
     });
@@ -147,7 +151,10 @@ pub async fn append_request(
     entries: Vec<LogEntry>,
     secret: std::option::Option<String>,
 ) {
-    let client = reqwest::Client::new();
+    let client = ClientBuilder::new()
+        .timeout(Duration::from_secs(3))
+        .build()
+        .unwrap();
 
     for node in &target {
         if node.endpoint == leader.endpoint {
