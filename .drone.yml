@@ -95,12 +95,38 @@ steps:
       - cd aurora
       - cargo build --release
 
+  - name: aurora-push
+    image: plugins/docker
+    depends_on: [ aurora-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/aurora
+      dockerfile: aurora/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
+
   - name: flora-build
     image: rust:1.82.0-bookworm
     depends_on: [ iris-build ]
     commands:
       - cd flora
       - cargo build --release
+
+  - name: flora-push
+    image: plugins/docker
+    depends_on: [ flora-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/flora
+      dockerfile: flora/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
 
   - name: makemake-build
     image: rust:1.82.0-bookworm
@@ -109,17 +135,56 @@ steps:
       - cd makemake
       - cargo build --release
 
+  - name: makemake-push
+    image: plugins/docker
+    depends_on: [ makemake-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/makemake
+      dockerfile: makemake/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
+
   - name: icarus-build
     image: rust:1.82.0-bookworm
-    depends_on: [ aurora-build, flora-build, makemake-build ]
+    depends_on: [ aurora-build, flora-build, makemake-build, aurora-push, flora-push, makemake-push ]
     commands:
       - cd icarus
       - cargo build --release
 
+  - name: icarus-push
+    image: plugins/docker
+    depends_on: [ icarus-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/icarus
+      dockerfile: icarus/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true
+
   - name: icarus-web-build
     image: node:22
-    depends_on: [ aurora-build, flora-build, makemake-build ]
+    depends_on: [ aurora-build, flora-build, makemake-build, aurora-push, flora-push, makemake-push ]
     commands:
       - cd icarus-web
       - npm install
       - npm run build
+
+  - name: icarus-web-push
+    image: plugins/docker
+    depends_on: [ icarus-web-build ]
+    settings:
+      registry: registry.icaruspw.dev
+      repo: registry.icaruspw.dev/icarus/icarus-web
+      dockerfile: icarus-web/Dockerfile
+      username: icarus
+      password:
+        from_secret: REGISTRY_PASSWORD
+      auto_tag: true
+      use_cache: true

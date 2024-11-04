@@ -3,6 +3,10 @@ name = "flora"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "flora"
+path = "src/main.rs"
+
 [dependencies]
 iris = { path = "../iris" }
 log = "0.4"
