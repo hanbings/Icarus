@@ -1,23 +1,23 @@
-use std::collections::HashMap;
-use std::env::set_var;
-use std::time::SystemTime;
 use crate::endpoint::{delete_queue, get_queue, pop_queue, push_queue, update_queue};
 use crate::raft::client;
+use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use crate::security::secret::secret_middleware;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
-use figment::Figment;
 use figment::providers::{Format, Toml};
+use figment::Figment;
 use log::info;
+use std::collections::HashMap;
+use std::env::set_var;
+use std::time::SystemTime;
 use tokio::sync::Mutex;
-use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 
+mod config;
 mod endpoint;
 mod message;
 mod raft;
 mod security;
-mod config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
