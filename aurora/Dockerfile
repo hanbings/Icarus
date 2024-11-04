@@ -1,5 +1,5 @@
 FROM debian:bookworm-slim
 COPY aurora/target/release/aurora aurora
-RUN apt-get install pkg-config libssl-dev
+RUN apt update && apt install pkg-config libssl-dev
 RUN chmod +x aurora
 ENTRYPOINT ["/aurora"]
