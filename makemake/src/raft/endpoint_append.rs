@@ -102,10 +102,9 @@ async fn append(
                                 let data = deque.pop_front();
 
                                 if data.is_some() {
-                                    let pop_data = Some(data.unwrap());
+                                    let pop_data = data.unwrap();
                                     let mut pop_state = pop_state.lock().await;
-                                    pop_state
-                                        .insert(token.to_string(), json!(pop_data).to_string());
+                                    pop_state.insert(token.to_string(), pop_data);
                                 }
                             }
                         }

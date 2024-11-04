@@ -12,6 +12,11 @@ struct DataRequest {
     value: String,
 }
 
+#[derive(Serialize, Deserialize)]
+struct PopToken {
+    token: String,
+}
+
 #[get("/message")]
 pub async fn get_queue(
     node_state: web::Data<Mutex<NodeState>>,
@@ -87,38 +92,7 @@ pub async fn pop_queue(
         )
         .await;
 
-    Ok(HttpResponse::Ok().json(token))
-}
-
-#[get("/message/{token}")]
-pub async fn get_pop_data(
-    node_state: web::Data<Mutex<NodeState>>,
-    client: web::Data<Mutex<Client>>,
-    token: web::Path<String>,
-    auth: BearerAuth,
-) -> Result<HttpResponse, Error> {
-    let node_state = node_state.lock().await;
-
-    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
-        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
-    }
-
-    let leader = node_state.leader.clone();
-    if leader.is_none() {
-        return Ok(HttpResponse::Ok().json(Message::fail()));
-    }
-    let leader = leader.unwrap();
-    let secret = node_state.secret.clone();
-
-    let client = client.lock().await;
-    let res = client
-        .get_pop_data(leader.endpoint.clone(), token.into_inner(), secret.clone())
-        .await;
-
-    match res {
-        None => Ok(HttpResponse::Ok().json(Message::fail())),
-        Some(res) => Ok(HttpResponse::Ok().json(res)),
-    }
+    Ok(HttpResponse::Ok().json(PopToken { token }))
 }
 
 #[post("/message/{channel}")]
@@ -181,4 +155,35 @@ pub async fn delete_queue(
         .await;
 
     Ok(HttpResponse::Ok().json(Message::success()))
+}
+
+#[get("/pop/{token}")]
+pub async fn get_pop_data(
+    node_state: web::Data<Mutex<NodeState>>,
+    client: web::Data<Mutex<Client>>,
+    token: web::Path<String>,
+    auth: BearerAuth,
+) -> Result<HttpResponse, Error> {
+    let node_state = node_state.lock().await;
+
+    if node_state.secret.is_some() && *auth.token() != node_state.secret.clone().unwrap() {
+        return Ok(HttpResponse::Unauthorized().json(Message::unauthorized()));
+    }
+
+    let leader = node_state.leader.clone();
+    if leader.is_none() {
+        return Ok(HttpResponse::Ok().json(Message::fail()));
+    }
+    let leader = leader.unwrap();
+    let secret = node_state.secret.clone();
+
+    let client = client.lock().await;
+    let res = client
+        .get_pop_data(leader.endpoint.clone(), token.into_inner(), secret.clone())
+        .await;
+
+    match res {
+        Some(res) => Ok(HttpResponse::Ok().json(res)),
+        None => Ok(HttpResponse::Ok().json(Message::fail())),
+    }
 }

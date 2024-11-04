@@ -5,7 +5,6 @@ use crate::raft::log::LogEntry;
 use crate::raft::node::NodeState;
 use actix_web::{get, post, web, Error, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
-use log::info;
 use reqwest::Client;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -104,9 +103,6 @@ async fn pop_data(
     token: web::Path<String>,
 ) -> Result<HttpResponse, Error> {
     let pop_state = pop_state.lock().await;
-
-    info!("Pop state: {:?}", pop_state);
-
     let pop_data = pop_state.get(&token.into_inner());
     if pop_data.is_none() {
         return Ok(HttpResponse::Ok().json(Message::fail()));

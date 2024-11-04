@@ -95,9 +95,6 @@ pub async fn vote_request<'a>(
             req = req.bearer_auth(node_state.secret.clone().unwrap());
         }
         let res = req.send().await;
-
-        info!("{}", res.is_ok());
-
         let res = match res {
             Ok(res) => res,
             Err(_) => {
