@@ -73,7 +73,7 @@ const groupBy = (array: Array<Service>) => {
         </div>
       </div>
     </div>
-    <div class="text-center text-gray-500 m-2">❤ Created by Icarus Project</div>
+    <a class="text-center text-gray-500 py-4" href="https://github.com/hanbings/icarus">❤ Created by Icarus Project</a>
   </div>
 </template>
 

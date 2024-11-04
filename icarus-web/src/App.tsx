@@ -1,13 +1,33 @@
-function App() {
-  return (
-    <>
-        <div className="bg-green-400 h-screen w-screen">
-            <div className="flex justify-center items-center h-full">
-                <p className="text-2xl font-bold underline">Hello World</p>
-            </div>
-        </div>
-    </>
-  )
-}
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import {LoginScreen} from "./screens/Login.tsx";
+import {Provider} from "react-redux";
+import {configureStore} from "@reduxjs/toolkit";
+import {useTokenStore} from "./stores/token.ts";
+import {HomeScreen} from "./screens/Home.tsx";
+import {ErrorScreen} from "./screens/Error.tsx";
+import {NotFoundScreen} from "./screens/NotFound.tsx";
 
-export default App
+export default function App() {
+    const store = configureStore({
+        reducer: {
+            token: useTokenStore.reducer
+        },
+    });
+
+    const router = createBrowserRouter([
+        {path: "/", element: <LoginScreen/>},
+        {path: "/login", element: <LoginScreen/>},
+        {path: "/activity", element: <HomeScreen/>},
+        {path: "/config", element: <HomeScreen/>},
+        {path: "/explore", element: <HomeScreen/>},
+        {path: "/message", element: <HomeScreen/>},
+        {path: "/error", element: <ErrorScreen/>},
+        {path: "*", element: <NotFoundScreen/>},
+    ])
+
+    return (
+        <Provider store={store}>
+            <RouterProvider router={router}/>
+        </Provider>
+    )
+}
