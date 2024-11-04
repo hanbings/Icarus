@@ -115,6 +115,13 @@ steps:
       - cd flora
       - cargo build --release
 
+  - name: makemake-build
+    image: rust:1.82.0-bookworm
+    depends_on: [ iris-build ]
+    commands:
+      - cd makemake
+      - cargo build --release
+
   - name: flora-push
     image: plugins/docker
     depends_on: [ aurora-build, flora-build, makemake-build ]
@@ -127,14 +134,7 @@ steps:
         from_secret: REGISTRY_PASSWORD
       auto_tag: true
       use_cache: true
-
-  - name: makemake-build
-    image: rust:1.82.0-bookworm
-    depends_on: [ iris-build ]
-    commands:
-      - cd makemake
-      - cargo build --release
-
+      
   - name: makemake-push
     image: plugins/docker
     depends_on: [ aurora-build, flora-build, makemake-build ]
