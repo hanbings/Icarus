@@ -1,32 +1,83 @@
+use std::collections::HashMap;
+use std::env::set_var;
+use std::time::SystemTime;
 use crate::endpoint::{delete_queue, get_queue, pop_queue, push_queue, update_queue};
 use crate::raft::client;
 use crate::security::secret::secret_middleware;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
+use figment::Figment;
+use figment::providers::{Format, Toml};
 use log::info;
 use tokio::sync::Mutex;
+use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 
 mod endpoint;
 mod message;
 mod raft;
 mod security;
+mod config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    set_var("RUST_LOG", "info");
+    env_logger::init();
+
+    info!("Extracting config...");
+    let config: config::Config = Figment::new()
+        .merge(Toml::file("aurora.toml"))
+        .extract()
+        .unwrap();
+
     info!("Initializing client...");
     tokio::spawn(client::async_clock(
-        "http://127.0.0.1:8080".to_string(),
-        None,
+        config.endpoint.clone(),
+        config.secret.clone(),
     ));
 
     info!("Setting up server...");
+    let node = Node {
+        endpoint: config.endpoint.clone(),
+    };
+    let nodes = config
+        .nodes
+        .iter()
+        .map(|node| Node {
+            endpoint: node.clone(),
+        })
+        .collect();
+    info!("Setting up server...");
+    let node_state = Data::new(Mutex::new(NodeState {
+        node,
+        nodes,
+        node_type: NodeType::Follower,
+        leader: None,
+        term: 0,
+        index: 0,
+        log: vec![],
+        data: HashMap::new(),
+        secret: config.secret.clone(),
+    }));
+    let node_clock = Data::new(Mutex::new(NodeClockState {
+        clock: SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis(),
+        heartbeat: SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis(),
+        election: 0,
+    }));
     let client = Data::new(Mutex::new(client::Client {}));
 
     info!("Application Running...");
     HttpServer::new(move || {
         let auth = HttpAuthentication::with_fn(secret_middleware);
         App::new()
+            .app_data(node_state.clone())
+            .app_data(node_clock.clone())
             .app_data(client.clone())
             .wrap(auth)
             .service(raft::endpoint_append::append)
@@ -41,7 +92,7 @@ async fn main() -> std::io::Result<()> {
             .service(update_queue)
             .service(delete_queue)
     })
-    .bind(("0.0.0.0", 8080))?
+    .bind((config.ip, config.port))?
     .run()
     .await
 }
