@@ -1,4 +1,4 @@
-FROM alpine:3.14
+FROM debian:bookworm-slim
 COPY ceres/ceres ceres
 RUN chmod +x ceres
-ENTRYPOINT ["./ceres"]
+ENTRYPOINT ["/ceres"]
