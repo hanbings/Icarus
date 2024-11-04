@@ -36,7 +36,7 @@ async fn main() -> std::io::Result<()> {
         .unwrap_or_else(|_| {
             error!(
                 "Unable to extract config from {}.\
-                Check aurora.toml or set AURORA_CONFIG environment variable.",
+                Check makemake.toml or set MAKEMAKE_CONFIG environment variable.",
                 env_config
             );
             std::process::exit(1);

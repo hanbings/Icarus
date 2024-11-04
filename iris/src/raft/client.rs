@@ -14,7 +14,7 @@ impl Client {
         secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
-        let entry = LogSaveEntry(0, 0, key, value);
+        let entry = vec![LogSaveEntry(0, 0, key, value)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
@@ -32,7 +32,7 @@ impl Client {
         secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
-        let entry = LogSaveEntry(0, 0, key, value);
+        let entry = vec![LogSaveEntry(0, 0, key, value)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 
@@ -49,7 +49,7 @@ impl Client {
         secret: Option<String>,
     ) -> Result<reqwest::Response, reqwest::Error> {
         let client = reqwest::Client::new();
-        let entry = LogDeleteEntry(0, 0, key);
+        let entry = vec![LogDeleteEntry(0, 0, key)];
 
         let mut req = client.post(format!("{}/raft/data", endpoint)).json(&entry);
 

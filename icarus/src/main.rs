@@ -13,7 +13,7 @@ async fn main() -> std::io::Result<()> {
     set_var("RUST_LOG", "info");
     env_logger::init();
 
-    let env_config = env::var("AURORA_CONFIG");
+    let env_config = env::var("ICARUS_CONFIG");
     let env_config = env_config.unwrap_or_else(|_| "{}".to_string());
 
     info!("Extracting config...");
@@ -24,7 +24,7 @@ async fn main() -> std::io::Result<()> {
         .unwrap_or_else(|_| {
             error!(
                 "Unable to extract config from {}.\
-                Check aurora.toml or set AURORA_CONFIG environment variable.",
+                Check icarus.toml or set ICARUS_CONFIG environment variable.",
                 env_config
             );
             std::process::exit(1);

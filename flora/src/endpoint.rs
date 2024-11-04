@@ -9,7 +9,7 @@ use tokio::sync::Mutex;
 #[get("/explore/{service_name}")]
 pub async fn explore_service(
     node_state: web::Data<Mutex<NodeState>>,
-    service_name: web::Data<String>,
+    service_name: web::Path<String>,
     auth: BearerAuth,
 ) -> Result<HttpResponse, Error> {
     let node_state = node_state.lock().await;
@@ -22,9 +22,7 @@ pub async fn explore_service(
         .data
         .iter()
         .flat_map(|instance| serde_json::from_str::<FloraService>(instance.1))
-        .filter(|service| {
-            service.service_name.as_str() == service_name.clone().into_inner().as_str()
-        })
+        .filter(|service| service.service_name.as_str() == service_name.clone().as_str())
         .collect();
 
     Ok(HttpResponse::Unauthorized().json(services))
@@ -95,7 +93,9 @@ pub async fn get_instance(
         return Ok(HttpResponse::Unauthorized().json(Message::fail()));
     }
 
-    Ok(HttpResponse::Ok().json(Message::success()))
+    let service = serde_json::from_str::<FloraService>(service.unwrap().as_str())?;
+
+    Ok(HttpResponse::Ok().json(service))
 }
 
 #[post("/service/{instance_name}")]
