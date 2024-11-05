@@ -30,7 +30,6 @@ public class GithubOAuthService {
 
     public String getAccessToken(String callback) {
 
-
         return null;
     }
 }
