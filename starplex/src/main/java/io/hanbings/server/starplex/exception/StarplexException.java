@@ -55,18 +55,14 @@ public class StarplexException extends RuntimeException {
 
             RequestTrace requestTrace = RequestTrace.parse(traceId, request);
             log.warn(
-                    """
-                            Request URL: {request.getRequestURL()}
-                            Message: {e.getMessage()}
-                            Time: {time}
-                            Request Data: {mapper.writeValueAsString(requestTrace)}
-                            Stack Trace: {Arrays.toString(e.getStackTrace())}
-                            """,
-                    request.getRequestURL(),
-                    e.getMessage(),
-                    time,
-                    mapper.writeValueAsString(requestTrace),
-                    Arrays.toString(e.getStackTrace())
+                    String.format(
+                            "Request URL: %s\nMessage: %s\nTime: %s\nRequest Data: %s\nStack Trace: %s",
+                            request.getRequestURL(),
+                            e.getMessage(),
+                            time,
+                            mapper.writeValueAsString(requestTrace),
+                            Arrays.toString(e.getStackTrace())
+                    )
             );
 
             return new ResponseEntity<>(

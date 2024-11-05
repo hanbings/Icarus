@@ -7,4 +7,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface AccountRepository extends MongoRepository<Account, String> {
     @Override
     <T extends Account> @NotNull T save(@NotNull T entity);
+
+    Account findByOpenid(String openid);
+
+    void deleteByOpenid(String openid);
 }

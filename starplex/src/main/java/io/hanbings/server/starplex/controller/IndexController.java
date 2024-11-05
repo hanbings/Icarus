@@ -19,9 +19,4 @@ public class IndexController {
     public Object index() {
         return INDEX;
     }
-
-    @GetMapping("/api/v0")
-    public Object api() {
-        return INDEX;
-    }
 }

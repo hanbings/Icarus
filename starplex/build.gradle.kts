@@ -4,7 +4,6 @@ plugins {
     id("io.spring.dependency-management") version "1.1.6"
 }
 
-@Suppress("SpellCheckingInspection")
 group = "io.hanbings.server"
 version = "1.0.0-SNAPSHOT"
 
@@ -23,7 +22,6 @@ configurations {
 repositories {
     mavenCentral()
     maven {
-        @Suppress("SpellCheckingInspection")
         name = "hanbings"
         url = uri("https://repository.hanbings.io/snapshots")
     }
@@ -34,6 +32,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-web-services")
+
+    implementation(project(":starplex-aurora-client"))
+    implementation(project(":starplex-flora-client"))
+    implementation(project(":starplex-makemake-client"))
 
     // https://mvnrepository.com/artifact/org.aspectj/aspectjtools
     implementation("org.aspectj:aspectjtools:1.9.22.1")
@@ -65,6 +67,27 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
+subprojects {
+    apply(plugin = "java")
+
+    group = "io.hanbings.server"
+    version = "1.0.0-SNAPSHOT"
+
+    repositories {
+        mavenCentral()
+    }
+
+
+    dependencies {
+        // https://mvnrepository.com/artifact/com.google.code.gson/gson
+        implementation("com.google.code.gson:gson:2.11.0")
+
+        // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+        implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+        // https://mvnrepository.com/artifact/org.jetbrains/annotations
+        implementation("org.jetbrains:annotations:26.0.1")
+        compileOnly("org.projectlombok:lombok")
+        annotationProcessor("org.projectlombok:lombok")
+    }
 }
