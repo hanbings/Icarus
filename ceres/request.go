@@ -43,6 +43,8 @@ func StartHttpRequest(serviceName string, endpoint string, expectStatusCode int,
 			}
 		}(response.Body)
 
+		fmt.Println("Service:", serviceName, "Endpoint:", endpoint, "StatusCode:", response.StatusCode, "Time:", time.Now().Unix())
+
 		if response.StatusCode == expectStatusCode {
 			services.Add(ServiceResponse{Code: response.StatusCode, Time: time.Now().Unix(), Status: Success})
 		} else {

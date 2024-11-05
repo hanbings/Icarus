@@ -10,24 +10,24 @@
 
 ```go
 type Config struct {
-    // 本服务运行的端口
-	Port  string        `json:"port"`
-    // 本服务运行的主机范围，一般为 0.0.0.0
-	Host  string        `json:"host"`
-    // 监测服务配置组
+	// 本服务运行的端口 
+	Port  string        `json:"port"` 
+	// 本服务运行的主机范围，一般为 0.0.0.0
+	Host  string        `json:"host"` 
+	// 监测服务配置组
 	Entry []ConfigEntry `json:"entry"`
 }
 
 type ConfigEntry struct {
-    // 要监测的服务名称，不允许重复
-	ServiceName      string `json:"service_name"`
-    // 需要请求的端点
-	Endpoint         string `json:"endpoint"`
-    // 请求的间隔（分钟）
-	Interval         int    `json:"interval"`
-    // 请求超时时间（秒钟）
-	Timeout          int    `json:"timeout"`
-    // 期待的在线时的状态码
+	// 要监测的服务名称，不允许重复
+	ServiceName      string `json:"service_name"` 
+	// 需要请求的端点
+	Endpoint         string `json:"endpoint"` 
+	// 请求的间隔（分钟）
+	Interval         int    `json:"interval"` 
+	// 请求超时时间（秒钟）
+	Timeout          int    `json:"timeout"` 
+	// 期待的在线时的状态码
 	OnlineStatusCode int    `json:"online_status_code"`
 }
 ```
