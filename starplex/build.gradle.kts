@@ -61,10 +61,10 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.jetbrains/annotations
     implementation("org.jetbrains:annotations:26.0.1")
-    compileOnly("org.projectlombok:lombok")
+    compileOnly("org.projectlombok:lombok:1.18.34")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-    annotationProcessor("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
 }
 
 subprojects {
@@ -87,7 +87,7 @@ subprojects {
 
         // https://mvnrepository.com/artifact/org.jetbrains/annotations
         implementation("org.jetbrains:annotations:26.0.1")
-        compileOnly("org.projectlombok:lombok")
-        annotationProcessor("org.projectlombok:lombok")
+        compileOnly("org.projectlombok:lombok:1.18.34")
+        annotationProcessor("org.projectlombok:lombok:1.18.34")
     }
 }
