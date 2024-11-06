@@ -1,6 +1,7 @@
 package io.hanbings.server.starplex.controller;
 
 import io.hanbings.server.starplex.auth.GithubToken;
+import io.hanbings.server.starplex.data.AccountDto;
 import io.hanbings.server.starplex.data.Message;
 import io.hanbings.server.starplex.data.Token;
 import io.hanbings.server.starplex.model.Account;
@@ -42,7 +43,7 @@ public class GithubOAuthController {
             );
         }
 
-        Account account = accountService.createAccountOrLogin(accessToken.accessToken());
+        AccountDto account = accountService.createAccountOrLogin(accessToken.accessToken());
         if (account == null) {
             return Map.of(
                     "code", 400,
