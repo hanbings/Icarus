@@ -6,7 +6,13 @@ mod security;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
+use endpoint::config_center::{
+    config_create_config, config_delete_config_key, config_get_config, config_get_config_key,
+    config_update_config_key,
+};
 use endpoint::login::login;
+use endpoint::message_queue::message_get_queue;
+use endpoint::service_explore::explore_service_get_services;
 use figment::providers::{Format, Json, Toml};
 use figment::Figment;
 use iris_irides::raft::client;
@@ -53,6 +59,13 @@ async fn main() -> std::io::Result<()> {
             .app_data(explore_client.clone())
             .app_data(message_client.clone())
             .wrap(auth)
+            .service(config_get_config)
+            .service(config_create_config)
+            .service(config_get_config_key)
+            .service(config_update_config_key)
+            .service(config_delete_config_key)
+            .service(explore_service_get_services)
+            .service(message_get_queue)
             .service(login)
     })
     .bind((config.ip, config.port))?
