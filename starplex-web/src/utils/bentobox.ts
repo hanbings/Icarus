@@ -101,20 +101,6 @@ export function randomBentoBox(row: number, col: number, height: number, width: 
     return bento
 }
 
-export const profileBentoBoxTemplate = [
-    {index: "0", span: "col-span-1 row-span-2"},
-    {index: "1", span: "col-span-2 row-span-1"},
-    {index: "2", span: "col-span-1 row-span-1"},
-    {index: "3", span: "col-span-1 row-span-1"},
-    {index: "4", span: "col-span-1 row-span-1"},
-    {index: "5", span: "col-span-1 row-span-2"},
-    {index: "6", span: "col-span-1 row-span-1"},
-    {index: "7", span: "col-span-1 row-span-1"},
-    {index: "8", span: "col-span-1 row-span-2"},
-    {index: "9", span: "col-span-2 row-span-1"},
-    {index: "10", span: "col-span-1 row-span-1"},
-]
-
 export const sloganBentoBoxTemplate = [
     {colorFrom: "#2fccba", colorTo: "#1abc9c", emoji: "❤️", title: "超级能力", text: undefined, background: undefined},
     {colorFrom: "#3498db", colorTo: "#2980b9", emoji: "✨", title: "超级开源", text: undefined, background: undefined},

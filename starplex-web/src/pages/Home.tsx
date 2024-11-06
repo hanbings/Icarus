@@ -1,4 +1,4 @@
-export default function HomeScreen() {
+export default function HomePage() {
     return (
         <div>
             <h1>Home</h1>
