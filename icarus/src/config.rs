@@ -20,6 +20,7 @@ pub struct TokenConfigEntry {
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize)]
 pub struct DistributedConfigEntry {
     pub name: String,
+    pub secret: Option<String>,
     pub endpoints: Vec<String>,
     pub size: u32,
 }
