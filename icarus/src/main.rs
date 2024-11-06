@@ -6,6 +6,7 @@ mod security;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
+use endpoint::login::login;
 use figment::providers::{Format, Json, Toml};
 use figment::Figment;
 use iris_irides::raft::client;
@@ -52,6 +53,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(explore_client.clone())
             .app_data(message_client.clone())
             .wrap(auth)
+            .service(login)
     })
     .bind((config.ip, config.port))?
     .run()

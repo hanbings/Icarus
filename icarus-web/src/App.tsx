@@ -17,10 +17,7 @@ export default function App() {
     const router = createBrowserRouter([
         {path: "/", element: <LoginScreen/>},
         {path: "/login", element: <LoginScreen/>},
-        {path: "/activity", element: <HomeScreen/>},
-        {path: "/config", element: <HomeScreen/>},
-        {path: "/explore", element: <HomeScreen/>},
-        {path: "/message", element: <HomeScreen/>},
+        {path: "/home", element: <HomeScreen/>},
         {path: "/error", element: <ErrorScreen/>},
         {path: "*", element: <NotFoundScreen/>},
     ])
