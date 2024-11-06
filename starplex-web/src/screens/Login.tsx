@@ -12,12 +12,12 @@ export default function LoginScreen() {
                     <h1 className="text-xl font-bold">进行登录</h1>
                     <p className="text-gray-500">
                         使用 Github 登录意味着您已阅读并同意我们的
-                        <a className="text-blue-400 m-1 underline underline-offset-2 cursor-pointer" onClick={() => {
+                        <a className="text-green-400 m-1 underline underline-offset-2 cursor-pointer" onClick={() => {
                             setIsisTermsOfServiceOpen(true);
                             onOpen();
                         }}>隐私条款</a>
                         以及
-                        <a className="text-blue-400 m-1 underline underline-offset-2 cursor-pointer" onClick={() => {
+                        <a className="text-green-400 m-1 underline underline-offset-2 cursor-pointer" onClick={() => {
                             setIsisTermsOfServiceOpen(false);
                             onOpen();
                         }}>用户条款</a>

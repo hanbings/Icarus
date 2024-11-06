@@ -1,39 +1,27 @@
 import {
+    Avatar,
+    Card,
+    Checkbox,
+    CheckboxGroup,
+    Chip,
+    Link,
     Table,
-    TableHeader,
-    TableColumn,
     TableBody,
-    TableRow,
     TableCell,
-    getKeyValue,
-    Checkbox, CheckboxGroup, Card
+    TableColumn,
+    TableHeader,
+    TableRow
 } from "@nextui-org/react";
 import {useState} from "react";
 
 const rows = [
     {
-        key: "1",
-        name: "Tony Reichert",
-        role: "CEO",
-        status: "Active",
-    },
-    {
-        key: "2",
-        name: "Zoey Lang",
-        role: "Technical Lead",
-        status: "Paused",
-    },
-    {
-        key: "3",
-        name: "Jane Fisher",
-        role: "Senior Developer",
-        status: "Active",
-    },
-    {
-        key: "4",
-        name: "William Howard",
-        role: "Community Manager",
-        status: "Vacation",
+        avatar: "https://avatars.githubusercontent.com/u/38599937",
+        username: "hanbings",
+        language: ["java", "typescript", "rust"],
+        stars: 100,
+        followers: 232,
+        rank: 60,
     },
 ];
 
@@ -44,7 +32,7 @@ const columns = [
     },
     {
         key: "username",
-        label: "用户名",
+        label: "Github 用户名",
     },
     {
         key: "language",
@@ -66,7 +54,7 @@ const columns = [
 
 export default function RankPage() {
     const [selected, setSelected] = useState([""]);
-    
+
     return (
         <div className="flex flex-col gap-4 w-full md:w-1/2">
             <Card className="p-4">
@@ -81,7 +69,6 @@ export default function RankPage() {
                     <Checkbox value="some-country">只看国内的开发者</Checkbox>
                     <Checkbox value="reverse">倒序</Checkbox>
                 </CheckboxGroup>
-                <p className="text-default-500 text-small">Selected: {selected.join(", ")}</p>
             </Card>
             <Table aria-label="Rank Table">
                 <TableHeader columns={columns}>
@@ -89,8 +76,24 @@ export default function RankPage() {
                 </TableHeader>
                 <TableBody items={rows}>
                     {(item) => (
-                        <TableRow key={item.key}>
-                            {(columnKey) => <TableCell>{getKeyValue(item, columnKey)}</TableCell>}
+                        <TableRow key={item.username}>
+                            <TableCell><Avatar src={item.avatar}/></TableCell>
+                            <TableCell>
+                                <Link isBlock showAnchorIcon href={`https://github.com/${item.username}`}
+                                      className="text-green-400">
+                                    {`@${item.username}`}
+                                </Link>
+                            </TableCell>
+                            <TableCell>{
+                                item.language.map((language) => {
+                                    return (
+                                        <div key={language}>{language}</div>
+                                    )
+                                })
+                            }</TableCell>
+                            <TableCell>{item.stars}</TableCell>
+                            <TableCell>{item.followers}</TableCell>
+                            <TableCell><Chip className="bg-green-200">{item.rank}</Chip></TableCell>
                         </TableRow>
                     )}
                 </TableBody>
