@@ -8,7 +8,7 @@ use actix_web::{
 };
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Map};
+use serde_json::json;
 use std::collections::HashMap;
 
 #[derive(Deserialize, Serialize)]
