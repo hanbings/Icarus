@@ -1,5 +1,10 @@
 import {Chip, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/react";
 import {MessageQueue} from "../types.ts";
+import {useSelector} from "react-redux";
+import {AppStore} from "../stores";
+import {useQuery} from "@tanstack/react-query";
+import axios from "axios";
+import {IcarusConfig} from "../config.ts";
 
 export default function Message() {
     const columns = [
@@ -7,10 +12,16 @@ export default function Message() {
         {name: "STATUS", uid: "status"},
     ]
 
-    const data: MessageQueue[] = [
-        {channel: "Test 0", entries: ["1", "2", "3"]},
-        {channel: "Test 1", entries: ["4", "5", "6"]},
-    ]
+    const token = useSelector((state: AppStore) => state.token)
+    const {data} = useQuery({
+        queryKey: ["message", token.token],
+        queryFn: (): Promise<MessageQueue[]> =>
+            axios.get(`${IcarusConfig.api}/message`, {
+                headers: {
+                    'Authorization': `Bearer ${token.token}`
+                }
+            }).then(data => data.data),
+    });
 
     return (
         <div className="flex flex-col gap-4 md:p-4">
@@ -19,7 +30,7 @@ export default function Message() {
                 <p className="text-gray-500">Rapidly deliver data across distributed application clusters.</p>
             </div>
 
-            {data.map((item, index) => (
+            {data && data.map((item, index) => (
                 <div key={index} className="flex flex-col gap-4">
                     <h2 className="text-xl font-bold">{item.channel}</h2>
                     <Table aria-label="Example table with custom cells">

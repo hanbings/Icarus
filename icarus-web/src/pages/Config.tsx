@@ -21,6 +21,8 @@ import {useState} from "react";
 import {useQuery} from "@tanstack/react-query";
 import {IcarusConfig} from "../config.ts";
 import axios from "axios"
+import {useSelector} from "react-redux";
+import {AppStore} from "../stores";
 
 export default function Config() {
     const columns = [
@@ -30,12 +32,13 @@ export default function Config() {
         {name: "ACTIONS", uid: "actions"},
     ]
 
+    const token = useSelector((state: AppStore) => state.token)
     const {data} = useQuery({
-        queryKey: ["config"],
+        queryKey: ["config", token.token],
         queryFn: (): Promise<[string, string][]> =>
             axios.get(`${IcarusConfig.api}/config`, {
                 headers: {
-                    'Authorization': `Bearer a60e9151-62a9-12d5-f37f-83e2ce88b334`
+                    'Authorization': `Bearer ${token.token}`
                 }
             }).then(data => Object.entries(data.data) as [string, string][]),
     });

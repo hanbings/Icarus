@@ -3,14 +3,21 @@ import Activity from "../pages/Activity.tsx";
 import Config from "../pages/Config.tsx";
 import Explore from "../pages/Explore.tsx";
 import Message from "../pages/Message.tsx";
+import {useSelector} from "react-redux";
+import {useNavigate} from "react-router-dom";
+import {AppStore} from "../stores";
+import {useEffect} from "react";
 
 export function HomeScreen() {
-    // const token = useSelector((state: AppStore) => state.token)
-    // const navigate = useNavigate();
+    const token = useSelector((state: AppStore) => state.token)
+    const navigate = useNavigate();
 
-    // useEffect(() => { if (!token.token) navigate("/login") }, [navigate, token.token]);
+    useEffect(() => {
+        if (!token.token) navigate("/login")
+    }, [navigate, token.token]);
 
-    let tabs = [
+
+    const tabs = [
         {
             id: "activity",
             label: "Activity",

@@ -1,6 +1,12 @@
 import {Chip, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow} from "@nextui-org/react";
 import {ExploreServiceEntry} from "../types.ts";
 import ExploreServiceTimeChip from "../components/ExploreServiceTimeChip.tsx";
+import {useSelector} from "react-redux";
+import {AppStore} from "../stores";
+import {useQuery} from "@tanstack/react-query";
+import axios from "axios";
+import {IcarusConfig} from "../config.ts";
+import {useEffect, useState} from "react";
 
 interface ExploreService {
     instance_name: string,
@@ -18,33 +24,25 @@ export default function Explore() {
         {name: "STATUS", uid: "status"},
     ]
 
-    const data: ExploreServiceEntry[] = [
-        {
-            "endpoint": "http://127.0.0.1:63000",
-            "created": 1730910000,
-            "last_updated": 1730910853,
-            "service_name": "Test Service 1",
-            "instance_name": "Test 0"
-        },
-        {
-            "endpoint": "http://127.0.0.1:63000",
-            "created": 1730910000,
-            "last_updated": 1730910853,
-            "service_name": "Test Service 1",
-            "instance_name": "Test 0"
-        },
-        {
-            "endpoint": "http://127.0.0.1:63000",
-            "created": 1730910000,
-            "last_updated": 1730910853,
-            "service_name": "Test Service 0",
-            "instance_name": "Test 1"
-        }
-    ]
+    const token = useSelector((state: AppStore) => state.token)
+    const {data} = useQuery({
+        queryKey: ["service", token.token],
+        queryFn: (): Promise<ExploreServiceEntry[]> =>
+            axios.get(`${IcarusConfig.api}/service`, {
+                headers: {
+                    'Authorization': `Bearer ${token.token}`
+                }
+            }).then(data => data.data),
+    });
 
-    const services = groupByServiceName(data)
+    const [services, setServices] = useState<Record<string, ExploreService[]>>()
+    useEffect(() => {
+        if (data && data.length > 0) setServices(groupByServiceName(data))
+    }, [data])
 
     function groupByServiceName(entries: ExploreServiceEntry[]): Record<string, ExploreService[]> {
+        console.log(entries)
+
         return entries.reduce((acc, entry) => {
             const service: ExploreService = {
                 instance_name: entry.instance_name,
@@ -68,7 +66,7 @@ export default function Explore() {
                 <h1 className="text-2xl font-bold">Flora Explore Service</h1>
                 <p className="text-gray-500">A service for fast online indexing of distributed applications.</p>
             </div>
-            {Object.keys(services).map((serviceName) => {
+            {services && Object.keys(services).map((serviceName) => {
                 const service = services[serviceName];
 
                 return (

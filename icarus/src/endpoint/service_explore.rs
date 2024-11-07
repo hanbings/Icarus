@@ -32,5 +32,18 @@ pub async fn explore_service_get_services(
         return Ok(HttpResponse::Ok().json(json!([])));
     }
 
-    Ok(HttpResponse::Ok().json(Message::success()))
+    let service_explore = config_state.service_explores.first().unwrap();
+    let service_explore_endpoint = service_explore.endpoints.first().unwrap().clone();
+    let client = reqwest::Client::new();
+
+    let req = client
+        .get(format!("{}/service", service_explore_endpoint))
+        .header(
+            "Authorization",
+            format!("Bearer {}", service_explore.clone().secret.unwrap()),
+        )
+        .send()
+        .await;
+
+    Ok(HttpResponse::Ok().json(req.unwrap().json::<Vec<FloraService>>().await.unwrap()))
 }
