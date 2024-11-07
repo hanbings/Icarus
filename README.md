@@ -8,6 +8,12 @@
 
 Status：https://status.icaruspw.dev
 
+> 呜呜如果打不开很可能和神秘网络环境有关，用户和服务器的都是
+>
+> 如果主站点的第一个登录按钮无法正常跳转 Github OAuth，请点击不登陆，然后在 Home 界面点击登录按钮即可
+>
+> 演示站点维护到 11 月底，不能保证 100% SLA uwu
+
 ## 文档
 
 - [架构](/docs/architecture.md)
