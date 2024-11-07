@@ -22,6 +22,8 @@
 
 [详细架构描述](./docs/architecture.md)
 
+[演示视频](https://icaruspw.dev/demo.mp4)
+
 ### 主程序
 - [Starplex](./starplex) - 星从 用户侧应用的后端 - Java
 - [Starplex-web](./starplex-web) - 星从 用户侧应用的前端 - TypeScript（React）
@@ -45,3 +47,5 @@
 ## 贡献
 
 [贡献指南](./CONTRIBUTING.md)
+
+本项目的代码均使用 [MIT License](https://github.com/hanbings/icarus/blob/main/LICENSE) 进行开源
