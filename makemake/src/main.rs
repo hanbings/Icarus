@@ -1,4 +1,6 @@
-use crate::endpoint::{delete_queue, get_leader, get_pop_data, get_queue, pop_queue, push_queue, update_queue};
+use crate::endpoint::{
+    delete_queue, get_leader, get_pop_data, get_queue, pop_queue, push_queue, update_queue,
+};
 use crate::raft::client;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use crate::security::secret::secret_middleware;

@@ -6,11 +6,21 @@ import com.plexpt.chatgpt.entity.chat.ChatChoice;
 import com.plexpt.chatgpt.entity.chat.ChatCompletion;
 import com.plexpt.chatgpt.entity.chat.ChatCompletionResponse;
 import com.plexpt.chatgpt.entity.chat.Message;
+import io.hanbings.server.MakemakeClient;
 import io.hanbings.server.starplex.config.ChatGPTConfig;
 import io.hanbings.server.starplex.data.ChatCPTCountry;
 import io.hanbings.server.starplex.data.ChatGPTReadme;
+import io.hanbings.server.starplex.model.Account;
+import io.hanbings.server.starplex.model.SimpleRating;
+import io.hanbings.server.starplex.repository.AccountRepository;
+import io.hanbings.server.starplex.repository.SimpleRatingRepository;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import org.kohsuke.github.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -20,20 +30,20 @@ public class ChatGPTService {
     static com.plexpt.chatgpt.entity.chat.Message summarizeReadmePrompt = Message.of("""
             请为我总结一下个人简介，根据文字编码、语言风格、文本内容等多种因素进行总结
             需要注意的内容是：
-            1.所在的国家（例如使用中文说明，这种编码就可以认为是中国，但要注意的是使用英文不一定在英国） 
-            2.个人博客地址 
-            3.对哪一种编程语言的掌握更好 
-            4.100 字左右的评价 
+            1.所在的国家（例如使用中文说明，这种编码就可以认为是中国，但要注意的是使用英文不一定在英国）
+            2.个人博客地址
+            3.对哪一种编程语言的掌握更好
+            4.100 字左右的评价
             5.给出一个 0 - 100 分的分数（如果我给出的内容为空，则为 0 分）
             
-            请以 
-            { 
-                "description": "评价内容", 
-                "country": "所在国家", 
-                "blog": "个人博客地址", 
-                "language": "掌握的编程语言（如果有多种则以数组形式）", 
+            请以
+            {
+                "description": "评价内容",
+                "country": "所在国家",
+                "blog": "个人博客地址",
+                "language": "掌握的编程语言（如果有多种则以数组形式）",
                 "score": "分数"
-            } 
+            }
             的格式（纯 json 格式，不要携带 markdown 代码块格式）返回你的回复
             不要回复多余的语句，无法总结出来的部分使用 null 替代
             """
@@ -87,5 +97,69 @@ public class ChatGPTService {
         ChatChoice choice = response.getChoices().getFirst();
 
         return choice.getMessage();
+    }
+
+    @Scheduled(fixedRate = 300000)
+    public void check() throws IOException {
+        final AccountRepository accountRepository = AsyncService.getBean("accountRepository", AccountRepository.class);
+        final SimpleRatingRepository simpleRatingRepository = AsyncService.getBean("simpleRatingRepository", SimpleRatingRepository.class);
+        @SuppressWarnings("SpellCheckingInspection") final MakemakeClient makemakeClient = AsyncService.getBean("makemakeClient", MakemakeClient.class);
+
+        for (int count = 0; count < 30; count++) {
+            String openid = makemakeClient.pop("ChatGPTService");
+
+            // mean that queue is empty
+            if (openid == null) break;
+
+            Account account = accountRepository.findByOpenid(openid);
+            if (account == null) continue;
+
+            SimpleRating rating = simpleRatingRepository.findByOpenid(openid);
+            if (rating == null) continue;
+
+            GitHub github = new GitHubBuilder().withOAuthToken(account.token()).build();
+            GHMyself me = github.getMyself();
+            // readme
+            GHRepository repository = me.getRepository(me.getLogin());
+            if (repository == null) continue;
+
+            GHContent readme = repository.getReadme();
+            if (readme == null) continue;
+
+            OkHttpClient okHttpClient = new OkHttpClient.Builder().build();
+            Request request = new Request.Builder()
+                    .url(readme.getDownloadUrl())
+                    .build();
+
+            var response = okHttpClient.newCall(request).execute();
+            if (response.body() == null) continue;
+            String content = response.body().string();
+            ChatGPTReadme readmeContent = summarizeReadme(content);
+            if (readmeContent == null) continue;
+            response.close();
+
+            SimpleRating updated = new SimpleRating(
+                    rating.openid(),
+                    rating.created(),
+                    rating.rank(),
+                    rating.username(),
+                    rating.nickname(),
+                    rating.avatar(),
+                    rating.company(),
+                    rating.location(),
+                    readmeContent.country() == null ? rating.country() : readmeContent.country(),
+                    rating.twitter(),
+                    rating.star(),
+                    rating.followers(),
+                    rating.rating(),
+                    readmeContent.score(),
+                    rating.languages(),
+                    rating.repositories(),
+                    readmeContent.description(),
+                    readmeContent.blog() == null ? rating.blog() : readmeContent.blog()
+            );
+
+            simpleRatingRepository.save(updated);
+        }
     }
 }

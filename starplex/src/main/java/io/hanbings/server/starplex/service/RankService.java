@@ -19,11 +19,14 @@ public class RankService {
         return simpleRatingRepository.findByUsername(username);
     }
 
-    public List<SimpleRating> getRank() {
+    public List<SimpleRating> getRank(boolean star, boolean follower, boolean desc) {
+        Sort.Order orderFirst = star ? Sort.Order.by("star") : Sort.Order.by("follower");
+        Sort.Order orderSecond = follower ? Sort.Order.by("follower") : Sort.Order.by("star");
+
         Pageable pageable = PageRequest.of(
-                1,
+                0,
                 10,
-                Sort.by(Sort.Direction.DESC, "created")
+                desc ? Sort.by(orderFirst, orderSecond).descending() : Sort.by(orderFirst, orderSecond).ascending()
         );
 
         return simpleRatingRepository.findAll(pageable).getContent();

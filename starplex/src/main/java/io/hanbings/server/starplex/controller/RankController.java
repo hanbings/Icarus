@@ -35,8 +35,12 @@ public class RankController {
     }
 
     @GetMapping("/rank")
-    public Object getRank(@RequestParam String type) {
-        List<SimpleRating> ratings = rankService.getRank();
+    public Object getRank(
+            @RequestParam(required = false, defaultValue = "false") boolean star,
+            @RequestParam(required = false, defaultValue = "false") boolean follower,
+            @RequestParam(required = false, defaultValue = "false") boolean desc
+    ) {
+        List<SimpleRating> ratings = rankService.getRank(star, follower, desc);
 
         if (ratings == null) {
             return Map.of(

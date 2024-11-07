@@ -132,6 +132,8 @@ public class AccountService {
             }
         }
 
+        makemakeClient.push("AccountService", openId);
+
         return rating;
     }
 }

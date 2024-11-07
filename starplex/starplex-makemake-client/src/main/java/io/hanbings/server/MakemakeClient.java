@@ -63,6 +63,8 @@ public record MakemakeClient(MakemakeConfig config) {
         if (res.body() == null) return null;
 
         var message = gson.fromJson(res.body().string(), PopMessage.class);
+
+        res.close();
         return message.data;
     }
 
