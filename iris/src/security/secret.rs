@@ -6,6 +6,10 @@ pub async fn secret_middleware(
     req: ServiceRequest,
     credentials: Option<BearerAuth>,
 ) -> Result<ServiceRequest, (Error, ServiceRequest)> {
+    if req.method() == "OPTIONS" {
+        return Ok(req);
+    }
+
     let Some(_credentials) = credentials else {
         return Err((error::ErrorUnauthorized("Unauthorized"), req));
     };

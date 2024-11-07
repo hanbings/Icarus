@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -77,6 +78,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(node_state.clone())
             .app_data(node_clock.clone())
             .app_data(client.clone())
+            .wrap(Cors::permissive())
             .wrap(auth)
             .service(append)
             .service(vote)

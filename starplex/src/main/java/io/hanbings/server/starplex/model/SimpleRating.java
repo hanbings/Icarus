@@ -22,6 +22,8 @@ public record SimpleRating(
         @Field("company") @JsonProperty("company") @Nullable String company,
         @Field("location") @JsonProperty("location") @Nullable String location,
         @Field("country") @JsonProperty("country") @Nullable String country,
-        @Field("twitter") @JsonProperty("twitter") @Nullable String twitter
+        @Field("twitter") @JsonProperty("twitter") @Nullable String twitter,
+        @Field("star") @JsonProperty("star") int star,
+        @Field("Followers") @JsonProperty("Followers") int followers
 ) {
 }

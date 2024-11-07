@@ -3,6 +3,7 @@ mod endpoint;
 mod message;
 mod security;
 
+use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -58,6 +59,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(config_client.clone())
             .app_data(explore_client.clone())
             .app_data(message_client.clone())
+            .wrap(Cors::permissive())
             .wrap(auth)
             .service(config_get_config)
             .service(config_create_config)

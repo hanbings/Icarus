@@ -2,6 +2,7 @@ use crate::endpoint::{delete_queue, get_pop_data, get_queue, pop_queue, push_que
 use crate::raft::client;
 use crate::raft::node::{Node, NodeClockState, NodeState, NodeType};
 use crate::security::secret::secret_middleware;
+use actix_cors::Cors;
 use actix_web::web::Data;
 use actix_web::{App, HttpServer};
 use actix_web_httpauth::middleware::HttpAuthentication;
@@ -93,6 +94,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(node_clock.clone())
             .app_data(pop_state.clone())
             .app_data(client.clone())
+            .wrap(Cors::permissive())
             .wrap(auth)
             .service(raft::endpoint_append::append)
             .service(raft::endpoint_vote::vote)

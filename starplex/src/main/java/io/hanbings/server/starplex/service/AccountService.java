@@ -17,6 +17,7 @@ import java.io.IOException;
 public class AccountService {
     final AccountRepository accountRepository;
 
+    @SuppressWarnings("deprecation")
     public AccountDto createAccountOrLogin(String token) throws IOException {
         GitHub github = new GitHubBuilder().withOAuthToken(token).build();
         GHMyself me = github.getMyself();
