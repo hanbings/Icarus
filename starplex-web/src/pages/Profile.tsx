@@ -14,7 +14,7 @@ export default function ProfilePage(props: ProfilePageProps) {
     const token = useSelector((state: AppStore) => state.token)
     const account = useSelector((state: AppStore) => state.account)
 
-    const {data, isLoading} = useQuery({
+    const {isLoading} = useQuery({
         queryKey: ["profile", props.username, token.token, account.account],
         queryFn: async () => {
             console.log(token.token?.token)

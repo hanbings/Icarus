@@ -187,3 +187,14 @@ pub async fn get_pop_data(
         None => Ok(HttpResponse::Ok().json(Message::fail())),
     }
 }
+
+#[get("/leader")]
+pub async fn get_leader(node_state: web::Data<Mutex<NodeState>>) -> Result<HttpResponse, Error> {
+    let node_state = node_state.lock().await;
+    let leader = node_state.leader.clone();
+    if leader.is_none() {
+        return Ok(HttpResponse::Ok().json(Message::fail()));
+    }
+
+    Ok(HttpResponse::Ok().json(node_state.leader.clone().unwrap().endpoint.clone()))
+}
