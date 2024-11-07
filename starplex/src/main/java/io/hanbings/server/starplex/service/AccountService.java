@@ -8,12 +8,14 @@ import io.hanbings.server.starplex.repository.AccountRepository;
 import io.hanbings.server.starplex.repository.SimpleRatingRepository;
 import io.hanbings.server.starplex.utils.SimpleRank;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.kohsuke.github.*;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Collection;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountService {
@@ -132,7 +134,11 @@ public class AccountService {
             }
         }
 
-        makemakeClient.push("AccountService", openId);
+        try {
+            makemakeClient.push("AccountService", openId);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
 
         return rating;
     }

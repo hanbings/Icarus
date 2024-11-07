@@ -13,17 +13,10 @@ import {
     TableRow
 } from "@nextui-org/react";
 import {useState} from "react";
-
-const rows = [
-    {
-        avatar: "https://avatars.githubusercontent.com/u/38599937",
-        username: "hanbings",
-        language: ["java", "typescript", "rust"],
-        stars: 100,
-        followers: 232,
-        rank: 60,
-    },
-];
+import {StarplexConfig} from "../config.ts";
+import {useQuery} from "@tanstack/react-query";
+import axios from "axios";
+import {SimpleRating} from "../types.ts";
 
 const columns = [
     {
@@ -35,8 +28,12 @@ const columns = [
         label: "Github 用户名",
     },
     {
-        key: "language",
-        label: "编程语言",
+        key: "profile",
+        label: "个人页面",
+    },
+    {
+        key: "blog",
+        label: "博客",
     },
     {
         key: "stars",
@@ -52,8 +49,28 @@ const columns = [
     },
 ];
 
+interface Rank {
+    rank: SimpleRating[]
+}
+
 export default function RankPage() {
     const [selected, setSelected] = useState([""]);
+
+    const {data} = useQuery({
+        queryKey: ["rank"],
+        queryFn: (): Promise<Rank> => axios.get(`${StarplexConfig.api}/rank`).then(data => data.data),
+    });
+
+    const getRank = (rating: SimpleRating) => {
+        let rank = 0
+        rank = rank + rating.rating.backlinks_rating
+        rank = rank + rating.rating.repositories_description_rating
+        rank = rank + rating.rating.webpages_rating
+        rank = rank + rating.rating.user_popularity
+        rank = rank + rating.rating.repositories_popularity
+
+        return rank / 5
+    }
 
     return (
         <div className="flex flex-col gap-4 w-full md:w-1/2">
@@ -70,34 +87,41 @@ export default function RankPage() {
                     <Checkbox value="reverse">倒序</Checkbox>
                 </CheckboxGroup>
             </Card>
-            <Table aria-label="Rank Table">
-                <TableHeader columns={columns}>
-                    {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
-                </TableHeader>
-                <TableBody items={rows}>
-                    {(item) => (
-                        <TableRow key={item.username}>
-                            <TableCell><Avatar src={item.avatar}/></TableCell>
-                            <TableCell>
-                                <Link isBlock showAnchorIcon href={`https://github.com/${item.username}`}
-                                      className="text-green-400">
+            {
+                data && data.rank && <Table aria-label="Rank Table">
+                    <TableHeader columns={columns}>
+                        {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+                    </TableHeader>
+                    <TableBody items={data.rank}>
+                        {(item) => (
+                            <TableRow key={item.username}>
+                                <TableCell><Avatar src={item.avatar}/></TableCell>
+                                <TableCell>
+                                    <Link isBlock showAnchorIcon href={`https://github.com/${item.username}`}
+                                          className="text-green-400">
+                                        {`@${item.username}`}
+                                    </Link>
+                                </TableCell>
+                                <TableCell><Link isBlock showAnchorIcon href={`/profile/${item.username}`}
+                                                 className="text-green-400">
                                     {`@${item.username}`}
-                                </Link>
-                            </TableCell>
-                            <TableCell>{
-                                item.language.map((language) => {
-                                    return (
-                                        <div key={language}>{language}</div>
-                                    )
-                                })
-                            }</TableCell>
-                            <TableCell>{item.stars}</TableCell>
-                            <TableCell>{item.followers}</TableCell>
-                            <TableCell><Chip className="bg-green-200">{item.rank}</Chip></TableCell>
-                        </TableRow>
-                    )}
-                </TableBody>
-            </Table>
+                                </Link></TableCell>
+                                <TableCell>
+                                    {
+                                        item.blog && <Link isBlock showAnchorIcon href={`/profile/${item.blog}`}
+                                                           className="text-green-400">
+                                            {`@${item.username}'s Blog`}
+                                        </Link>
+                                    }
+                                </TableCell>
+                                <TableCell>{item.star}</TableCell>
+                                <TableCell>{item.followers}</TableCell>
+                                <TableCell><Chip className="bg-green-200">{getRank(item)}</Chip></TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            }
         </div>
     )
 }

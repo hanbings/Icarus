@@ -102,18 +102,116 @@ export function randomBentoBox(row: number, col: number, height: number, width: 
 }
 
 export const sloganBentoBoxTemplate = [
-    {colorFrom: "#2fccba", colorTo: "#1abc9c", emoji: "❤️", title: "超级能力", text: undefined, background: undefined},
-    {colorFrom: "#3498db", colorTo: "#2980b9", emoji: "✨", title: "超级开源", text: undefined, background: undefined},
-    {colorFrom: "#9b59b6", colorTo: "#8e44ad", emoji: "💜", title: "超级好用", text: undefined, background: undefined},
-    {colorFrom: "#e74c3c", colorTo: "#c0392b", emoji: "🎃", title: "超级可爱", text: undefined, background: undefined},
-    {colorFrom: "#f1c40f", colorTo: "#f39c12", emoji: "😂", title: "超级开心", text: undefined, background: undefined},
-    {colorFrom: "#1abc9c", colorTo: "#16a085", emoji: "👍", title: "超级好看", text: undefined, background: undefined},
-    {colorFrom: "#e67e22", colorTo: "#d35400", emoji: "🍀", title: "超级幸运", text: undefined, background: undefined},
-    {colorFrom: "#e74c3c", colorTo: "#c0392b", emoji: "🍭", title: "超级有趣", text: undefined, background: undefined},
-    {colorFrom: "#3498db", colorTo: "#2980b9", emoji: "🚀", title: "超级快乐", text: undefined, background: undefined},
-    {colorFrom: "#2ecc71", colorTo: "#27ae60", emoji: "🎉", title: "超级美好", text: undefined, background: undefined},
-    {colorFrom: "#f39c12", colorTo: "#e67e22", emoji: "🍕", title: "超级好吃", text: undefined, background: undefined},
-    {colorFrom: "#e67e22", colorTo: "#d35400", emoji: "🍀", title: "超级幸运", text: undefined, background: undefined},
-    {colorFrom: "#3498db", colorTo: "#2980b9", emoji: "✨", title: "超级开源", text: undefined, background: undefined},
-    {colorFrom: "#2fccba", colorTo: "#1abc9c", emoji: "❤️", title: "超级能力", text: undefined, background: undefined},
+    {
+        colorFrom: "#2fccba",
+        colorTo: "#1abc9c",
+        emoji: "❤️",
+        title: "感谢有你",
+        text: "你是我们的动力源泉！",
+        background: undefined
+    },
+    {
+        colorFrom: "#3498db",
+        colorTo: "#2980b9",
+        emoji: "✨",
+        title: "开源无限",
+        text: "源源不断的惊喜等你来探索！",
+        background: undefined
+    },
+    {
+        colorFrom: "#9b59b6",
+        colorTo: "#8e44ad",
+        emoji: "💜",
+        title: "有趣到爆",
+        text: "趣味无限，停不下来！",
+        background: undefined
+    },
+    {
+        colorFrom: "#e74c3c",
+        colorTo: "#c0392b",
+        emoji: "🎃",
+        title: "幸运降临",
+        text: "今天是你幸运的一天！",
+        background: undefined
+    },
+    {
+        colorFrom: "#f1c40f",
+        colorTo: "#f39c12",
+        emoji: "😂",
+        title: "开心无限",
+        text: "笑声连连，开心每一天！",
+        background: undefined
+    },
+    {
+        colorFrom: "#1abc9c",
+        colorTo: "#16a085",
+        emoji: "👍",
+        title: "超酷无敌",
+        text: "颜值与实力并存！",
+        background: undefined
+    },
+    {
+        colorFrom: "#e67e22",
+        colorTo: "#d35400",
+        emoji: "🍀",
+        title: "超级幸运",
+        text: "好运加持，一路顺风！",
+        background: undefined
+    },
+    {
+        colorFrom: "#e74c3c",
+        colorTo: "#c0392b",
+        emoji: "🍭",
+        title: "有趣爆棚",
+        text: "每个细节都超有趣！",
+        background: undefined
+    },
+    {
+        colorFrom: "#3498db",
+        colorTo: "#2980b9",
+        emoji: "🚀",
+        title: "超级飞跃",
+        text: "人生如火箭，势不可挡！",
+        background: undefined
+    },
+    {
+        colorFrom: "#2ecc71",
+        colorTo: "#27ae60",
+        emoji: "🎉",
+        title: "美好时光",
+        text: "生活太美好，想要一起庆祝！",
+        background: undefined
+    },
+    {
+        colorFrom: "#f39c12",
+        colorTo: "#e67e22",
+        emoji: "🍕",
+        title: "超级美味",
+        text: "从口到心，绝对美味！",
+        background: undefined
+    },
+    {
+        colorFrom: "#e67e22",
+        colorTo: "#d35400",
+        emoji: "🍀",
+        title: "好运连连",
+        text: "每天都在等着好运降临！",
+        background: undefined
+    },
+    {
+        colorFrom: "#3498db",
+        colorTo: "#2980b9",
+        emoji: "✨",
+        title: "无限开源",
+        text: "每个代码背后都闪烁着希望的光！",
+        background: undefined
+    },
+    {
+        colorFrom: "#2fccba",
+        colorTo: "#1abc9c",
+        emoji: "❤️",
+        title: "超级能力",
+        text: "每一个开发者都能改变世界！",
+        background: undefined
+    },
 ]
