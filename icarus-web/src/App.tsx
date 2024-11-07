@@ -6,6 +6,7 @@ import {useTokenStore} from "./stores/token.ts";
 import {HomeScreen} from "./screens/Home.tsx";
 import {ErrorScreen} from "./screens/Error.tsx";
 import {NotFoundScreen} from "./screens/NotFound.tsx";
+import {QueryClient, QueryClientProvider} from "@tanstack/react-query";
 
 export default function App() {
     const store = configureStore({
@@ -22,9 +23,13 @@ export default function App() {
         {path: "*", element: <NotFoundScreen/>},
     ])
 
+    const query = new QueryClient()
+
     return (
-        <Provider store={store}>
-            <RouterProvider router={router}/>
-        </Provider>
+        <QueryClientProvider client={query}>
+            <Provider store={store}>
+                <RouterProvider router={router}/>
+            </Provider>
+        </QueryClientProvider>
     )
 }
