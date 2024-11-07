@@ -1,10 +1,4 @@
-use actix_web::{
-    get,
-    http::Error,
-    post,
-    web::{self, Data},
-    HttpResponse,
-};
+use actix_web::{get, http::Error, web::Data, HttpResponse};
 use actix_web_httpauth::extractors::bearer::BearerAuth;
 use serde::{Deserialize, Serialize};
 use serde_json::json;

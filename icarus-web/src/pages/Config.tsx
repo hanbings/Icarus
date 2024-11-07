@@ -32,12 +32,12 @@ export default function Config() {
 
     const {data} = useQuery({
         queryKey: ["config"],
-        queryFn: (): Promise<Map<string, string>> =>
+        queryFn: (): Promise<[string, string][]> =>
             axios.get(`${IcarusConfig.api}/config`, {
                 headers: {
                     'Authorization': `Bearer a60e9151-62a9-12d5-f37f-83e2ce88b334`
                 }
-            }).then(data => data.data),
+            }).then(data => Object.entries(data.data) as [string, string][]),
     });
 
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
@@ -71,7 +71,7 @@ export default function Config() {
                                     </TableColumn>
                                 )}
                             </TableHeader>
-                            <TableBody items={data.entries()}>
+                            <TableBody items={data}>
                                 {(item) => (
                                     <TableRow key={item[0]}>
                                         <TableCell>{item[0]}</TableCell>
@@ -101,7 +101,7 @@ export default function Config() {
                 <ModalContent>
                     {(onClose) => (
                         <>
-                            <ModalHeader className="flex flex-col gap-1">Modal Title</ModalHeader>
+                            <ModalHeader className="flex flex-col gap-1">Create Config Entry</ModalHeader>
                             <ModalBody>
                                 <Input
                                     label="Key"
