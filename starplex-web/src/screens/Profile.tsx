@@ -8,7 +8,7 @@ export default function ProfileScreen() {
         <div className="bg-[#f9f0b2] h-screen w-screen flex justify-center items-center">
             {
                 username ?
-                    <ProfilePage username={username}/> :
+                    <ProfilePage username={username} isProfilePage={true}/> :
                     (
                         <div className="flex flex-col justify-center items-center h-full gap-4">
                             <div className="text-2xl font-bold">😶‍🌫️ Page Not Found</div>

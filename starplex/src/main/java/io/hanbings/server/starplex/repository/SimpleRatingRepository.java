@@ -17,4 +17,6 @@ public interface SimpleRatingRepository extends MongoRepository<SimpleRating, St
     SimpleRating updateSimpleRatingByOpenid(String openid, SimpleRating simpleRating);
 
     @NotNull Page<SimpleRating> findAll(@NotNull Pageable pageable);
+
+    SimpleRating findByUsername(String username);
 }

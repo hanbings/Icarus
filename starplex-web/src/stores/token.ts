@@ -4,12 +4,12 @@ export const useTokenStore = createSlice(
     {
         name: "token",
         initialState: {
-            token: localStorage.getItem('token') || undefined
+            token: localStorage.getItem('token') && JSON.parse(<string>localStorage.getItem('token')) || undefined
         },
         reducers: {
             setToken: (state, action) => {
                 state.token = action.payload
-                localStorage.setItem('token', action.payload)
+                localStorage.setItem('token', JSON.stringify(action.payload))
             },
             clearToken: (state) => {
                 state.token = undefined

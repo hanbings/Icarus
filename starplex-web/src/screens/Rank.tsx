@@ -5,14 +5,17 @@ import ProfilePage from "../pages/Profile.tsx";
 import {Token} from "../types.ts";
 import {useSelector} from "react-redux";
 import {AppStore} from "../stores";
+import axios from "axios";
+import {StarplexConfig} from "../config.ts";
 
 export default function RankScreen() {
     const token = useSelector((state: AppStore) => state.token)
+    const account = useSelector((state: AppStore) => state.account)
 
     const tabs = [
         {id: "1", label: "Rank", content: getRankPage()},
         {id: "2", label: "Home", content: getHomePage(token.token)},
-        {id: "3", label: "Profile", content: getProfilePage(undefined)},
+        {id: "3", label: "Profile", content: getProfilePage(account.account?.username)},
     ];
 
     return (
@@ -41,12 +44,16 @@ function getRankPage() {
 
 function getHomePage(token: Token | undefined) {
     return (
-        <div className="bg-[#f9f0b2] h-full w-full flex justify-center items-center">
+        <div className="bg-[#f9f0b2] h-full w-full flex justify-center">
             {
                 token ?
                     <HomePage/> :
                     (
-                        <Button className="bg-black text-white">
+                        <Button className="bg-black text-white"
+                                onClick={
+                                    () => axios
+                                        .get(`${StarplexConfig.api}/oauth/github`)
+                                        .then(data => window.location.href = data.data)}>
                             <img src={"github-mark.svg"} className="scale-50" alt="Login with Github"/>
                             使用 Github 登录
                         </Button>
@@ -61,9 +68,13 @@ function getProfilePage(username: string | undefined) {
         <div className="bg-[#f9f0b2] h-full w-full flex justify-center items-center">
             {
                 username ?
-                    <ProfilePage username={username}/> :
+                    <ProfilePage username={username} isProfilePage={false}/> :
                     (
-                        <Button className="bg-black text-white">
+                        <Button className="bg-black text-white"
+                                onClick={
+                                    () => axios
+                                        .get(`${StarplexConfig.api}/oauth/github`)
+                                        .then(data => window.location.href = data.data)}>
                             <img src={"github-mark.svg"} className="scale-50" alt="Login with Github"/>
                             使用 Github 登录
                         </Button>

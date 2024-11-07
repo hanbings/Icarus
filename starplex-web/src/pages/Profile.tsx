@@ -1,8 +1,11 @@
 export interface ProfilePageProps {
-    username: string
+    username: string,
+    isProfilePage: boolean
 }
 
 export default function ProfilePage(props: ProfilePageProps) {
+
+
     const profileBentoBox = [
         {
             index: "0",
