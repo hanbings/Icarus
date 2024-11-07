@@ -49,7 +49,7 @@ public class ChatGPTService {
             }
             的格式（纯 json 格式，不要携带 markdown 代码块格式）返回你的回复
             不要回复多余的语句，如果你不知道或是这个地方实际上不存在以未知和 0 概率替代
-                """
+            """
     );
 
     public ChatGPTService(ChatGPTConfig chatGPTConfig) {

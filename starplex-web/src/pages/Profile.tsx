@@ -1,10 +1,36 @@
+import {useSelector} from "react-redux";
+import {AppStore} from "../stores";
+import axios from "axios";
+import {StarplexConfig} from "../config.ts";
+import {Spinner} from "@nextui-org/react";
+import {useQuery} from "@tanstack/react-query";
+
 export interface ProfilePageProps {
     username: string,
     isProfilePage: boolean
 }
 
 export default function ProfilePage(props: ProfilePageProps) {
+    const token = useSelector((state: AppStore) => state.token)
+    const account = useSelector((state: AppStore) => state.account)
 
+    const {data, isLoading} = useQuery({
+        queryKey: ["profile", props.username, token.token, account.account],
+        queryFn: async () => {
+            console.log(token.token?.token)
+            if (account.account) {
+                const data = await axios.get(`${StarplexConfig.api}/rating`, {
+                    headers: {
+                        'Authorization': `Bearer ${token.token?.token}`
+                    }
+                });
+                return data.data;
+            } else {
+                const profile = await axios.get(`${StarplexConfig.api}/github/${props.username}`);
+                return profile.data;
+            }
+        }
+    })
 
     const profileBentoBox = [
         {
@@ -82,19 +108,28 @@ export default function ProfilePage(props: ProfilePageProps) {
     ]
 
     return (
-        <div className="grid grid-cols-4 gap-2">
-            {profileBentoBox.map((item, index) => (
-                <div
-                    key={index}
-                    className={`flex items-center justify-center bg-white rounded-3xl shadow ${item.span}`}
-                    style={{
-                        height: `${item.height * 24 + item.heightGap}vh`,
-                        width: `${item.width * 12 + item.widthGap}vw`
-                    }}
-                >
-                    {item.content}
+        <div>
+            {
+                isLoading && <div className="flex flex-col justify-center items-center h-full w-full">
+                    <Spinner/>
                 </div>
-            ))}
+            }
+            {
+                !isLoading && <div className="grid grid-cols-4 gap-2">
+                    {profileBentoBox.map((item, index) => (
+                        <div
+                            key={index}
+                            className={`flex items-center justify-center bg-white rounded-3xl shadow ${item.span}`}
+                            style={{
+                                height: `${item.height * 24 + item.heightGap}vh`,
+                                width: `${item.width * 12 + item.widthGap}vw`
+                            }}
+                        >
+                            {item.content}
+                        </div>
+                    ))}
+                </div>
+            }
         </div>
     )
 }

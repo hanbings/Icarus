@@ -5,8 +5,6 @@ import lombok.experimental.Accessors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-
 @Data
 @Component
 @Accessors(fluent = true)

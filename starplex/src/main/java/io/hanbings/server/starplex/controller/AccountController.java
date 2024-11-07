@@ -25,7 +25,7 @@ public class AccountController {
     @SuppressWarnings("Duplicates")
     @StarplexPermissionCheck(access = {"AROUND"})
     public Object getRating(HttpServletRequest request) throws IOException {
-        String openId = request.getHeader(Header.ACCOUNT);
+        String openId = (String) request.getAttribute(Header.ACCOUNT);
         if (openId == null) {
             return Map.of(
                     "code", Message.ReturnCode.UNAUTHORIZED,
@@ -52,7 +52,7 @@ public class AccountController {
     @SuppressWarnings("Duplicates")
     @StarplexPermissionCheck(access = {"AROUND"})
     public Object refreshRating(HttpServletRequest request) throws IOException {
-        String openId = request.getHeader(Header.ACCOUNT);
+        String openId = (String) request.getAttribute(Header.ACCOUNT);
         if (openId == null) {
             return Map.of(
                     "code", Message.ReturnCode.UNAUTHORIZED,
@@ -79,7 +79,7 @@ public class AccountController {
     @SuppressWarnings("Duplicates")
     @StarplexPermissionCheck(access = {"AROUND"})
     public Object account(HttpServletRequest request) {
-        String openId = request.getHeader(Header.ACCOUNT);
+        String openId = (String) request.getAttribute(Header.ACCOUNT);
         if (openId == null) {
             return Map.of(
                     "code", Message.ReturnCode.UNAUTHORIZED,
@@ -106,7 +106,7 @@ public class AccountController {
     @SuppressWarnings("Duplicates")
     @StarplexPermissionCheck(access = {"AROUND"})
     public Object deleteAccount(HttpServletRequest request, @PathVariable String openid) {
-        String openId = request.getHeader(Header.ACCOUNT);
+        String openId = (String) request.getAttribute(Header.ACCOUNT);
         if (openId == null || !openId.equals(openid)) {
             return Map.of(
                     "code", Message.ReturnCode.UNAUTHORIZED,

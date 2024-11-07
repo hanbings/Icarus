@@ -24,7 +24,7 @@ public record SimpleRating(
         @Field("twitter") @JsonProperty("twitter") @Nullable String twitter,
 
         @Field("star") @JsonProperty("star") int star,
-        @Field("Followers") @JsonProperty("Followers") int followers,
+        @Field("followers") @JsonProperty("followers") int followers,
         @Field("rating") @JsonProperty("rating") @NotNull SimpleRank.Rating rating,
 
         @Field("ai_rating") @JsonProperty("ai_rating") int aiRating,

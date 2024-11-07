@@ -19,11 +19,10 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class GithubOAuthService {
-    final GithubOAuthConfig config;
-    final Map<String, Long> stateMap = new HashMap<>();
-
     static Gson gson = new Gson();
     static OkHttpClient okHttpClient = new OkHttpClient();
+    final GithubOAuthConfig config;
+    final Map<String, Long> stateMap = new HashMap<>();
 
     public String getAuthorizationUrl(boolean privateRepository) {
         String state = RandomUtils.uuid();
@@ -44,7 +43,7 @@ public class GithubOAuthService {
                         .orElse("");
     }
 
-    @Scheduled(initialDelay=1000, fixedDelay=30000)
+    @Scheduled(initialDelay = 1000, fixedDelay = 30000)
     public void checkState() {
         stateMap.forEach((key, value) -> {
             if (value + 30000 < System.currentTimeMillis()) {

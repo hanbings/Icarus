@@ -1,5 +1,6 @@
 package io.hanbings.server.starplex.utils;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -136,19 +137,33 @@ public class SimpleRank {
 
     @NoArgsConstructor
     public static class Rating {
+        @JsonProperty("is_bio_exist")
         boolean isBioExist;
+        @JsonProperty("is_company_exist")
         boolean isCompanyExist;
+        @JsonProperty("is_location_exist")
         boolean isLocationExist;
+        @JsonProperty("is_blog_exist")
         boolean isBlogExist;
+        @JsonProperty("bio_rating")
         double bioRating;
+        @JsonProperty("backlinks_rating")
         double backlinksRating;
+        @JsonProperty("repositories_description_rating")
         double repositoriesDescriptionRating;
+        @JsonProperty("webpages_rating")
         double webpagesRating;
+        @JsonProperty("user_popularity")
         double userPopularity;
+        @JsonProperty("repositories_popularity")
         double repositoriesPopularity;
+        @JsonProperty("forks_count")
         double forksCount;
+        @JsonProperty("stars_count")
         double starsCount;
+        @JsonProperty("repositories_count")
         double repositoriesCount;
+        @JsonProperty("followers_count")
         double followersCount;
     }
 }

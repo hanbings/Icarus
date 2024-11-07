@@ -4,7 +4,6 @@ import io.hanbings.server.starplex.auth.GithubToken;
 import io.hanbings.server.starplex.data.AccountDto;
 import io.hanbings.server.starplex.data.Message;
 import io.hanbings.server.starplex.data.Token;
-import io.hanbings.server.starplex.model.Account;
 import io.hanbings.server.starplex.service.AccountService;
 import io.hanbings.server.starplex.service.GithubOAuthService;
 import io.hanbings.server.starplex.service.TokenService;

@@ -10,4 +10,5 @@ public record ChatGPTReadme(
         @Nullable String blog,
         @Nullable List<String> language,
         int score
-) { }
+) {
+}

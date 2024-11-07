@@ -51,6 +51,18 @@ public class AccountService {
             );
         }
 
+        Account updated = new Account(
+                account.openid(),
+                account.created(),
+                account.username(),
+                account.avatar(),
+                token,
+                account.email(),
+                account.nickname()
+        );
+
+        account = accountRepository.save(updated);
+
         return new AccountDto(
                 account.openid(),
                 account.created(),
