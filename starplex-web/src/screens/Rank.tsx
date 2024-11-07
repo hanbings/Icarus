@@ -2,12 +2,16 @@ import {Button, Tab, Tabs} from "@nextui-org/react";
 import RankPage from "../pages/Rank.tsx";
 import HomePage from "../pages/Home.tsx";
 import ProfilePage from "../pages/Profile.tsx";
-import {Token} from "../../types.ts";
+import {Token} from "../types.ts";
+import {useSelector} from "react-redux";
+import {AppStore} from "../stores";
 
 export default function RankScreen() {
+    const token = useSelector((state: AppStore) => state.token)
+
     const tabs = [
         {id: "1", label: "Rank", content: getRankPage()},
-        {id: "2", label: "Home", content: getHomePage(undefined)},
+        {id: "2", label: "Home", content: getHomePage(token.token)},
         {id: "3", label: "Profile", content: getProfilePage(undefined)},
     ];
 

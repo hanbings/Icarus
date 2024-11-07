@@ -16,6 +16,6 @@ public class MakemakeConfig {
     String name;
     @Value("${makemake.secret}")
     String secret;
-    @Value("${makemake.endpoints}")
-    List<String> endpoints;
+    @Value("${makemake.endpoint}")
+    String endpoint;
 }

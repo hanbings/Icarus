@@ -1,7 +1,11 @@
 import {Button, Card, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, useDisclosure} from "@nextui-org/react";
 import {useState} from "react";
+import {useNavigate} from "react-router-dom";
+import axios from "axios";
+import {StarplexConfig} from "../config.ts";
 
 export default function LoginScreen() {
+    const navigate = useNavigate()
     const {isOpen, onOpen, onOpenChange} = useDisclosure();
     const [isisTermsOfServiceOpen, setIsisTermsOfServiceOpen] = useState(false);
 
@@ -9,9 +13,9 @@ export default function LoginScreen() {
         <div className="bg-[#f9f0b2] h-screen w-screen flex justify-center items-center">
             <Card className="flex flex-col gap-4 w-[420px] p-8">
                 <div className="flex flex-col gap-2">
-                    <h1 className="text-xl font-bold">进行登录</h1>
+                    <h1 className="text-xl font-bold">进行登陆</h1>
                     <p className="text-gray-500">
-                        使用 Github 登录意味着您已阅读并同意我们的
+                        使用 Github 登陆意味着您已阅读并同意我们的
                         <a className="text-green-400 m-1 underline underline-offset-2 cursor-pointer" onClick={() => {
                             setIsisTermsOfServiceOpen(true);
                             onOpen();
@@ -25,10 +29,14 @@ export default function LoginScreen() {
                     </p>
                 </div>
                 <Button className="bg-black text-white">
-                    <img src={"github-mark.svg"} className="scale-50" alt="Login with Github"/>
+                    <img src={"github-mark.svg"} className="scale-50" alt="Login with Github"
+                         onClick={
+                             () => axios
+                                 .get(`${StarplexConfig.api}/oauth/github`)
+                                 .then(data => window.location.href = data.data)}/>
                     使用 Github 登录
                 </Button>
-                <Button className="bg-gray-300">
+                <Button className="bg-gray-300" onClick={() => navigate("/rank")}>
                     不登陆的情况下继续
                 </Button>
             </Card>

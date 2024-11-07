@@ -5,6 +5,8 @@ import io.hanbings.server.MakemakeConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 @SuppressWarnings("SpellCheckingInspection")
 public class MakemakeClientConfig {
@@ -14,7 +16,7 @@ public class MakemakeClientConfig {
                 new MakemakeConfig(
                         config.name,
                         config.secret,
-                        config.endpoints
+                        List.of(config.endpoint)
                 )
         );
     }

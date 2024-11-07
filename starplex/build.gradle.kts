@@ -70,6 +70,12 @@ dependencies {
 subprojects {
     apply(plugin = "java")
 
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
     group = "io.hanbings.server"
     version = "1.0.0-SNAPSHOT"
 
