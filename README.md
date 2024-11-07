@@ -4,6 +4,10 @@
 
 **简直天坑**
 
+主站点：https://beta.icaruspw.dev
+
+Status：https://status.icaruspw.dev
+
 ## 文档
 
 - [架构](/docs/architecture.md)
